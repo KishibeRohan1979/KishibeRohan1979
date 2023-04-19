@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MytestDemo:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MytestDemo_jar</output-path>
+    <root id="archive" name="MytestDemo.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="MytestDemo" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../maven/maven-repository/com/github/jbytecode/RCaller/3.0.2/RCaller-3.0.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../maven/maven-repository/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../maven/maven-repository/commons-lang/commons-lang/2.6/commons-lang-2.6.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

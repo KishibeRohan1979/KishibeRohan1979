@@ -233,6 +233,10 @@ public class BiliBiliUtil {
                     map.put("isUpLikeThisMessage", upActionJsonMap.get("like"));
                     // 记录up主是否回复了这个评论
                     map.put("isUpReplyThisMessage", upActionJsonMap.get("reply"));
+                    // 记录视频的avid
+                    map.put("avid", replie.get("oid"));
+                    // 评论是否可见（1，可见；0，不可见）
+                    map.put("isDelete", "1");
                     JSONObject json = new JSONObject(map);
                     resultList.add(json);
                 }

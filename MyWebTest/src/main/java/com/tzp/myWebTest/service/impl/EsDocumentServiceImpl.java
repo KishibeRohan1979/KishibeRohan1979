@@ -3,6 +3,7 @@ package com.tzp.myWebTest.service.impl;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryStringQuery;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
@@ -158,11 +159,17 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      */
     @Override
-    public List<T> searchByQuery(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz) {
+    public List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz) {
+
+        // 防止* ？等通配符被转译
+        queryString = queryString.replaceAll("\\*", "\\\\*");
+        queryString = queryString.replaceAll("\\?", "\\\\?");
+
         // 1.构建查询的对象
         QueryStringQuery stringQuery = new QueryStringQuery.Builder()
                 //.fields("name", "description")
-                .query(queryString)
+                // * 是通配符，代表模糊查询。但是避免使用一个以通配符开头的模式
+                .query("*" + queryString + "*")
                 .build();
 
         Query query = new Query.Builder()
@@ -198,13 +205,13 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
      */
     @Override
     public List<T> searchByPage(String idxName, Integer pageNo, Integer pageSize, Class<T> clazz) {
-        // 2.搜索
-        SearchRequest searchRequest = new SearchRequest.Builder()
-                .index(idxName)
-                .from(pageNo * pageSize)
-                .size(pageSize)
-                .build();
-
+        // 1.搜索
+        SearchRequest.Builder searchBuilder = new SearchRequest.Builder();
+        searchBuilder
+            .index(idxName)
+            .from(pageNo * pageSize)
+            .size(pageSize);
+        SearchRequest searchRequest = searchBuilder.build();
         try {
             return this.elasticsearchClient.search(searchRequest, clazz)
                     .hits().hits().stream()
@@ -214,6 +221,27 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
             e.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     *
+     *
+     * @param idxName  索引名
+     * @param t        对象
+     * @param pageNo   当前页
+     * @param pageSize 每页多少条数据
+     * @param clazz    clazz  封装的实现
+     */
+    @Override
+    public List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz) {
+
+        return null;
+    }
+
+    @Override
+    public boolean updateById(String indexName, T t, String id, Class clazz) {
+
+        return false;
     }
 
 

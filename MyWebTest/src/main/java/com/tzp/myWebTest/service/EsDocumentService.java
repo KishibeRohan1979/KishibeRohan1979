@@ -73,7 +73,7 @@ public interface EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      * @return 查询结果
      */
-    List<T> searchByQuery(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz);
+    List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz);
 
     /**
      * 分页查询
@@ -84,6 +84,25 @@ public interface EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      */
     List<T> searchByPage(String idxName, Integer pageNo, Integer pageSize, Class<T> clazz);
+
+    /**
+     * 精确查询，某个字段某个值的
+     *
+     * @param idxName  索引名
+     * @param pageNo   当前页
+     * @param t        对象
+     * @param pageSize 每页多少条数据
+     * @param clazz    clazz  封装的实现
+     */
+    List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz);
+
+    /**
+     * 修改索引的数据
+     *
+     * @param indexName  索引名
+     * @param clazz    clazz  封装的实现
+     */
+    boolean updateById(String indexName, T t, String id, Class clazz);
 
     // 异步方法
     /**

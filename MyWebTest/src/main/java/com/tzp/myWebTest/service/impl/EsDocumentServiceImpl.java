@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -224,7 +227,7 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
     }
 
     /**
-     *
+     * 根据对象查询
      *
      * @param idxName  索引名
      * @param t        对象
@@ -233,9 +236,37 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      */
     @Override
-    public List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz) {
+    public List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz) throws Exception {
+        Class<?> tClass = t.getClass();
+        Field[] fields = tClass.getDeclaredFields();
+        for (Field field : fields) {
+            String name = field.getName();
+            Class<?> type = field.getType();
+            System.out.println("属性：" + name);
+            System.out.println("type：" + type);
+            // 转化type为自定义对象
+//            Object object = type.getDeclaredConstructor().newInstance();
+            // 获取getName方法
+            Method getNameMethod = t.getClass().getMethod("get"+ capitalizeFirstLetter(name));
+            // 调用getName方法
+            Object nameValue = getNameMethod.invoke(t);
+            System.out.println(null == nameValue);
+            System.out.println(nameValue);
+        }
 
         return null;
+    }
+
+    /**
+     * 首字母大写
+     * @param str 需要转化的英语字符串
+     * @return 首字母大写的字符串
+     */
+    private static String capitalizeFirstLetter(String str) {
+        if (str == null || str.length() == 0) {
+            return str;
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
     @Override

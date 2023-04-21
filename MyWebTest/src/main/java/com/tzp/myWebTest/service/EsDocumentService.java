@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -94,7 +95,7 @@ public interface EsDocumentService<T> {
      * @param pageSize 每页多少条数据
      * @param clazz    clazz  封装的实现
      */
-    List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz);
+    List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz) throws Exception;
 
     /**
      * 修改索引的数据

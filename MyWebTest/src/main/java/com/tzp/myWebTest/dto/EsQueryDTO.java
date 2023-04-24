@@ -13,11 +13,11 @@ public class EsQueryDTO<T> {
     @ApiModelProperty(value = "索引名称", name = "indexName")
     private String indexName;
 
-    @ApiModelProperty(value = "分词搜索关键字值", name = "queryString")
-    private String queryString;
-
     @ApiModelProperty(value = "分词搜索关键字对象，可以通过传一组key-value来精确查询", name = "queryObject")
     private T queryObject;
+
+    @ApiModelProperty(value = "分词搜索关键字值", name = "queryString")
+    private String queryString;
 
     @ApiModelProperty(value = "分词搜索匹配字段", name = "queryFileds")
     private List<String> queryFileds;

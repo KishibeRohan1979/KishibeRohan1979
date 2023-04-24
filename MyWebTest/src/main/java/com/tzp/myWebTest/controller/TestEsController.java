@@ -116,7 +116,7 @@ public class TestEsController {
     @GetMapping("/test")
     public MsgUtil test() throws Exception {
         EsTest esTest = new EsTest();
-        esTest.setAge(18);
+        esTest.setAge("18");
         esTest.setId("22");
         esTest.setName("哈哈");
         esTestDocumentService.searchByQueryObject(ES_TEST_DATA, esTest, 1, 1, EsTest.class);

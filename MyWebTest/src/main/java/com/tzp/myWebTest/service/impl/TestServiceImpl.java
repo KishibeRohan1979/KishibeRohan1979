@@ -32,7 +32,7 @@ public class TestServiceImpl implements TestService {
             //更新redis缓存任务进度
             asyncService.updateProgress(beforePoint + "." + afterPoint.substring(0,2) + "%");
             EsTest esTest = esTests.get(i);
-            esTestDocumentService.createByFluentDSL("es_test_data", null, esTest);
+            esTestDocumentService.createOneDocument("es_test_data", null, esTest);
         }
     }
 }

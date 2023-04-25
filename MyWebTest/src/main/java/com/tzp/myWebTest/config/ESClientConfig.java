@@ -1,12 +1,9 @@
 package com.tzp.myWebTest.config;
 
-import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.rest_client.RestClientTransport;
 import lombok.Setter;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,27 +26,9 @@ public class ESClientConfig {
      * @return
      */
     @Bean
-    public ElasticsearchClient elasticsearchClient() {
+    public RestHighLevelClient elasticsearchClient() {
         HttpHost[] httpHosts = toHttpHost();
-        // Create the RestClient
-        RestClient restClient = RestClient.builder(httpHosts).build();
-        // Create the transport with a Jackson mapper
-        RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-        // create the API client
-        return new ElasticsearchClient(transport);
-    }
-
-    /**
-     * 异步方式
-     *
-     * @return
-     */
-    @Bean
-    public ElasticsearchAsyncClient elasticsearchAsyncClient() {
-        HttpHost[] httpHosts = toHttpHost();
-        RestClient restClient = RestClient.builder(httpHosts).build();
-        RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-        return new ElasticsearchAsyncClient(transport);
+        return new RestHighLevelClient(RestClient.builder(httpHosts));
     }
 
     /**
@@ -61,7 +40,6 @@ public class ESClientConfig {
         if (!StringUtils.hasLength(hosts)) {
             throw new RuntimeException("无效的elasticsearch配置。elasticsearch.hosts不能为空！");
         }
-
         // 多个IP逗号隔开
         String[] hostArray = hosts.split(",");
         HttpHost[] httpHosts = new HttpHost[hostArray.length];

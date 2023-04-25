@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -40,7 +39,7 @@ public class TestEsController {
     @PostMapping("/addNewDocument")
     public MsgUtil addNewDocument(@RequestBody EsTest es) {
         try {
-            esTestDocumentService.createByFluentDSL(ES_TEST_DATA, null, es);
+            esTestDocumentService.createOneDocument(ES_TEST_DATA, null, es);
             return MsgUtil.success("添加成功", es);
         } catch (Exception e) {
             e.printStackTrace();

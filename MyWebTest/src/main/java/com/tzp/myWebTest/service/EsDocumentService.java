@@ -1,12 +1,11 @@
 package com.tzp.myWebTest.service;
 
-import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.IndexResponse;
+
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexResponse;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 public interface EsDocumentService<T> {
 
@@ -19,7 +18,7 @@ public interface EsDocumentService<T> {
      * @param idxId    索引id
      * @param document 文档对象
      */
-    IndexResponse createByFluentDSL(String idxName, String idxId, T document) throws Exception;
+    IndexResponse createOneDocument(String idxName, String idxId, T document) throws Exception;
 
     /**
      * 批量增加文档
@@ -84,7 +83,7 @@ public interface EsDocumentService<T> {
      * @param pageSize 每页多少条数据
      * @param clazz    clazz  封装的实现
      */
-    List<T> searchByPage(String idxName, Integer pageNo, Integer pageSize, Class<T> clazz);
+    List<T> searchByPage(String idxName, Integer pageNo, Integer pageSize, Class<T> clazz) throws IOException;
 
     /**
      * 精确查询，某个字段某个值的
@@ -104,15 +103,5 @@ public interface EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      */
     boolean updateById(String indexName, T t, String id, Class clazz);
-
-    // 异步方法
-    /**
-     * 异步新增文档
-     *
-     * @param idxName  索引名
-     * @param idxId    索引id
-     * @param document 文档
-     */
-    void createAsync(String idxName, String idxId, T document);
 
 }

@@ -21,9 +21,13 @@ public class TestServiceImpl implements TestService {
     private AsyncService asyncService;
 
     @Override
-    public void demo(List<EsTest> esTests) throws Exception {
+    public void demo(List<EsTest> esTests) {
         for (int i = 0; i < esTests.size(); i++) {
-            Thread.sleep(5000);
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             //计算百分比
             String per = String.valueOf( ((double) i/esTests.size())*100 );
             String[] point = per.split("\\.");
@@ -32,7 +36,14 @@ public class TestServiceImpl implements TestService {
             //更新redis缓存任务进度
             asyncService.updateProgress(beforePoint + "." + afterPoint.substring(0,2) + "%");
             EsTest esTest = esTests.get(i);
-            esTestDocumentService.createOneDocument("es_test_data", null, esTest);
+            try {
+                esTestDocumentService.createOneDocument("es_test_data", null, esTest);
+            } catch (Exception e) {
+                if ( (!e.getMessage().contains("201 Created")) && (!e.getMessage().contains("200 OK")) ) {
+                    e.printStackTrace();
+                }
+            }
+
         }
     }
 }

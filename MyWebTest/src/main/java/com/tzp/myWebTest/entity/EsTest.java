@@ -23,7 +23,4 @@ public class EsTest implements Serializable {
     @ApiModelProperty(value = "个人简介", name = "sign")
     private String sign;
 
-    public void setSign(String sign) {
-        this.sign = sign.replace("\n", "\\n").replace("\t", "\\t");
-    }
 }

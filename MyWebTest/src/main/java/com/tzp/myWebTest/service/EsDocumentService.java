@@ -73,7 +73,7 @@ public interface EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      * @return 查询结果
      */
-    List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz);
+    List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz) throws IOException;
 
     /**
      * 分页查询

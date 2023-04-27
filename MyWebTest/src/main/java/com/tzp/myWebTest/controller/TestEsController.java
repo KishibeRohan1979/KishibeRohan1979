@@ -42,8 +42,12 @@ public class TestEsController {
             esTestDocumentService.createOneDocument(ES_TEST_DATA, null, es);
             return MsgUtil.success("添加成功", es);
         } catch (Exception e) {
-            e.printStackTrace();
-            return MsgUtil.fail("添加失败", e.getMessage());
+            if ( (!e.getMessage().contains("201 Created")) && (!e.getMessage().contains("200 OK")) ) {
+                e.printStackTrace();
+                return MsgUtil.fail("添加失败", e.getMessage());
+            } else {
+                return MsgUtil.success("添加成功", es);
+            }
         }
     }
 
@@ -54,8 +58,12 @@ public class TestEsController {
             esTestDocumentService.batchCreate(ES_TEST_DATA, list);
             return MsgUtil.success("添加成功");
         } catch (Exception e) {
-            e.printStackTrace();
-            return MsgUtil.fail("添加失败", e.getMessage());
+            if (!e.getMessage().contains("200 OK")) {
+                e.printStackTrace();
+                return MsgUtil.fail("添加失败", e.getMessage());
+            } else {
+                return MsgUtil.success("添加成功");
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 package com.tzp.myWebTest.service.impl;
 
-import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson.JSON;
 import com.tzp.myWebTest.service.EsDocumentService;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -14,10 +14,14 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +51,7 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         IndexRequest request = new IndexRequest();
         request.index(idxName);
         request.id(idxId);
-        request.source(JSON.toJSONString(document), XContentType.JSON);
+        request.source(JSON.toJSONString(document, false), XContentType.JSON);
         return restHighLevelClient.index(request, RequestOptions.DEFAULT);
     }
 
@@ -62,11 +66,10 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         BulkRequest bulkRequest = new BulkRequest();
         // 批量请求处理
         for (T document : documents) {
-            System.out.println(JSON.toJSONString(document));
             bulkRequest.add(
                     // 这里是数据信息
                     new IndexRequest(idxName)
-                            .source(JSON.toJSONString(document), XContentType.JSON)
+                            .source(JSON.toJSONString(document, false), XContentType.JSON)
             );
         }
         return restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
@@ -163,46 +166,55 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      */
     @Override
-    public List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz) {
+    public List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz) throws IOException {
 
-        // 防止* ？等通配符被转译
-//        queryString = queryString.replaceAll("\\*", "\\\\*");
-//        queryString = queryString.replaceAll("\\?", "\\\\?");
-//
-//        MultiMatchQuery multiMatchQuery = new MultiMatchQuery.Builder()
-//                .query(queryString)
-//                .build();
-//
-//        Highlight highlight = new Highlight.Builder()
-//                .preTags("<font color='red'>")
-//                .postTags("</font>")
-//                .requireFieldMatch(false) //多字段时，需要设置为false
-//                .fields("*", highlightFieldBuilder -> highlightFieldBuilder)
-//                .build();
-//
-//        Query query = new Query.Builder()
-//                .multiMatch(multiMatchQuery)
-////                .queryString(stringQuery)
-//                .build();
-//
-//        // 2.搜索
-//        SearchRequest searchRequest = new SearchRequest.Builder()
-//                .index(idxName)
-//                .from(pageNo * pageSize)
-//                .size(pageSize)
-//                .query(query)
-//                .highlight(highlight)
-//                .build();
-//
-//        try {
-//            return this.elasticsearchClient.search(searchRequest, clazz)
-//                    .hits().hits().stream()
-//                    .map(Hit::source)
-//                    .collect(Collectors.toList());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-            return null;
-//        }
+        List<T> resultList = new ArrayList<>();
+        // 1.创建查询请求对象
+        SearchRequest searchRequest = new SearchRequest();
+        // 2.构建搜索条件
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        // (1)查询条件 使用QueryBuilders工具类创建
+        // 多字段模糊查询
+        String[] fields = {"*"}; // 查询所有字符串类型的字段
+        QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(queryString, fields).analyzer("english");
+        searchSourceBuilder.from(pageNo * pageSize);
+        searchSourceBuilder.size(pageSize);
+        // (2) 高亮设置
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field("*"); // 高亮所有字段
+        highlightBuilder.requireFieldMatch(false); // 多个字段时，匹配不同的字段时需要匹配高亮
+        highlightBuilder.preTags("<font color='red'>"); // 高亮前缀
+        highlightBuilder.postTags("</font>"); // 高亮后缀
+        highlightBuilder.numOfFragments(0);// 不进行限制，完整显示所有高亮内容
+        searchSourceBuilder.highlighter(highlightBuilder);
+        // (3)条件投入
+        searchSourceBuilder.query(queryBuilder);
+        // 3.添加条件到请求
+        searchRequest.source(searchSourceBuilder);
+        // 4.客户端查询请求
+        SearchResponse search = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        // 5.查看返回结果
+        SearchHits hits = search.getHits();
+        SearchHit[] hitsArray = hits.getHits();
+        for (SearchHit hit : hitsArray) {
+            Map<String, Object> map = hit.getSourceAsMap();
+            // 获取高亮字段
+            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            for (Map.Entry<String, HighlightField> entry : highlightFields.entrySet()) {
+                String fieldName = entry.getKey();
+                HighlightField highlight = entry.getValue();
+                Text[] fragments = highlight.fragments();
+                StringBuilder fragmentString = new StringBuilder();
+                for (Text fragment : fragments) {
+                    fragmentString.append(fragment);
+                }
+                // 替换原有字段值
+                map.put(fieldName, fragmentString.toString());
+            }
+            resultList.add(JSON.parseObject(JSON.toJSONString(map), clazz));
+        }
+        return resultList;
+
     }
 
     /**

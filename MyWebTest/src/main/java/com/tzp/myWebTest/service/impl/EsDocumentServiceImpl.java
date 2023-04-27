@@ -202,20 +202,26 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         for (SearchHit hit : hitsArray) {
             Map<String, Object> map = hit.getSourceAsMap();
             System.out.println(map);
+            System.out.println("================================================");
             // 获取高亮字段
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
             for (Map.Entry<String, HighlightField> entry : highlightFields.entrySet()) {
                 String fieldName = entry.getKey();
-                System.out.println(fieldName);
+                System.out.println("fieldName:==" + fieldName);
+                System.out.println("================================================");
                 HighlightField highlight = entry.getValue();
-                System.out.println(highlight);
+                System.out.println("highlight:==" + highlight);
+                System.out.println("================================================");
                 Text[] fragments = highlight.fragments();
+                System.out.println("fragments:==" + fragments);
                 StringBuilder fragmentString = new StringBuilder();
                 for (Text fragment : fragments) {
                     fragmentString.append(fragment);
                 }
                 // 替换原有字段值
-                map.put(fieldName, fragmentString.toString());
+                String[] point = (fieldName+".").split("\\.");
+                String beforePoint = point[0];
+                map.put(beforePoint, fragmentString.toString());
             }
             resultList.add(JSON.parseObject(JSON.toJSONString(map), clazz));
         }

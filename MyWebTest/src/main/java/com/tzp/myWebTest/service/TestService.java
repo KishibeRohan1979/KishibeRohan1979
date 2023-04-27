@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface TestService {
 
-    public void demo(List<EsTest> esTests);
+    void demo(List<EsTest> esTests);
 
 }

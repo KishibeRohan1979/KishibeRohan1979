@@ -87,7 +87,7 @@ public class TestEsController {
             if (StringUtils.isBlank(dto.getQueryString())) {
                 esTests = esTestDocumentService.searchByPage(ES_TEST_DATA, dto.getPageNum(), dto.getPageSize(), EsTest.class);
             } else {
-                esTests = esTestDocumentService.searchByQueryString(ES_TEST_DATA, dto.getQueryString(), dto.getPageNum(), dto.getPageSize(), EsTest.class);
+                esTests = esTestDocumentService.searchByQueryString(ES_TEST_DATA, dto.getQueryString(), dto.getPageNum(), dto.getPageSize(), EsTest.class, dto.getAnalyzerType());
             }
             return MsgUtil.success("查询成功", esTests);
         } catch (Exception e) {

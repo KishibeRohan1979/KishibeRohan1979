@@ -20,7 +20,7 @@ public class EsQueryDTO<T> {
     private String queryString;
 
     @ApiModelProperty(value = "分词搜索匹配字段", name = "queryFileds")
-    private List<String> queryFileds;
+    private List<String> queryFields;
 
     @ApiModelProperty(value = "页码", name = "pageNum", dataType="int", notes="当前页码", required=true)
     private Integer pageNum;
@@ -36,6 +36,9 @@ public class EsQueryDTO<T> {
 
     @ApiModelProperty(value = "高亮搜索字段", name = "highlightFields")
     private List<String> highlightFields;
+
+    @ApiModelProperty(value = "分词方式", name = "analyzerType")
+    private String analyzerType;
 
     @ApiModelProperty(value = "范围查询字段", name = "rangeField")
     private String rangeField;

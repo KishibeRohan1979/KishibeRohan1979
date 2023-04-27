@@ -2,6 +2,7 @@ package com.tzp.myWebTest.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.tzp.myWebTest.service.EsDocumentService;
+import com.tzp.myWebTest.util.AnalyzerType;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -166,7 +167,7 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      */
     @Override
-    public List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz) throws IOException {
+    public List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz, String analyzerType) throws IOException {
 
         List<T> resultList = new ArrayList<>();
         // 1.创建查询请求对象
@@ -176,7 +177,8 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         // (1)查询条件 使用QueryBuilders工具类创建
         // 多字段模糊查询
         String[] fields = {"*"}; // 查询所有字符串类型的字段
-        QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(queryString, fields).analyzer("english");
+        analyzerType = AnalyzerType.getAnalyzerType(analyzerType);
+        QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(queryString, fields).analyzer(analyzerType);
         searchSourceBuilder.from(pageNo * pageSize);
         searchSourceBuilder.size(pageSize);
         // (2) 高亮设置
@@ -192,17 +194,21 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         // 3.添加条件到请求
         searchRequest.source(searchSourceBuilder);
         // 4.客户端查询请求
+        System.out.println(searchRequest);
         SearchResponse search = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         // 5.查看返回结果
         SearchHits hits = search.getHits();
         SearchHit[] hitsArray = hits.getHits();
         for (SearchHit hit : hitsArray) {
             Map<String, Object> map = hit.getSourceAsMap();
+            System.out.println(map);
             // 获取高亮字段
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
             for (Map.Entry<String, HighlightField> entry : highlightFields.entrySet()) {
                 String fieldName = entry.getKey();
+                System.out.println(fieldName);
                 HighlightField highlight = entry.getValue();
+                System.out.println(highlight);
                 Text[] fragments = highlight.fragments();
                 StringBuilder fragmentString = new StringBuilder();
                 for (Text fragment : fragments) {

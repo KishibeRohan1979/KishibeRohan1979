@@ -1,11 +1,13 @@
 package com.tzp.myWebTest.service;
 
 
+import com.tzp.myWebTest.dto.EsQueryDTO;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface EsDocumentService<T> {
 
@@ -67,34 +69,32 @@ public interface EsDocumentService<T> {
     /**
      * 分页条件查询
      *
-     * @param idxName  索引名
-     * @param pageNo   当前页
-     * @param pageSize 每页多少条数据
-     * @param clazz    clazz  封装的实现
+     * @param esQueryDTO 查询类
      * @return 查询结果
      */
-    List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz, String analyzerType) throws IOException;
+    Map<String, Object> searchByQueryString(EsQueryDTO<T> esQueryDTO) throws IOException;
 
     /**
      * 分页查询
      *
-     * @param idxName  索引名
-     * @param pageNo   当前页
-     * @param pageSize 每页多少条数据
-     * @param clazz    clazz  封装的实现
+     * @param esQueryDTO 查询类
      */
-    List<T> searchByPage(String idxName, Integer pageNo, Integer pageSize, Class<T> clazz) throws IOException;
+    Map<String, Object> searchByPage(EsQueryDTO<T> esQueryDTO) throws IOException;
 
     /**
-     * 精确查询，某个字段某个值的
+     * 分页对象精确查询，字符模糊查询，某个字段某个值的
      *
-     * @param idxName  索引名
-     * @param pageNo   当前页
-     * @param t        对象
-     * @param pageSize 每页多少条数据
-     * @param clazz    clazz  封装的实现
+     * @param  esQueryDTO 查询类
      */
-    List<T> searchByQueryObject(String idxName, T t, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz, String analyzerType) throws Exception;
+    Map<String, Object> searchByQueryObject(EsQueryDTO<T> esQueryDTO) throws Exception;
+
+    /**
+     * 分页对象精确查询，字符模糊查询，某个字段某个值的
+     *
+     * @param esQueryDTO 查询类
+     * @return list
+     */
+//    List<T> searchByQueryObjectMatchAndTerm(EsQueryDTO<T> esQueryDTO) throws Exception;
 
     /**
      * 修改索引的数据
@@ -102,6 +102,6 @@ public interface EsDocumentService<T> {
      * @param indexName  索引名
      * @param clazz    clazz  封装的实现
      */
-    boolean updateById(String indexName, T t, String id, Class clazz);
+    boolean updateById(String indexName, T t, String id, Class<T> clazz);
 
 }

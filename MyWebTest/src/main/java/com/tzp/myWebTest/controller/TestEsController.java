@@ -8,6 +8,7 @@ import com.tzp.myWebTest.service.EsDocumentService;
 import com.tzp.myWebTest.service.TestService;
 import com.tzp.myWebTest.util.AsyncMsgUtil;
 import com.tzp.myWebTest.util.MsgUtil;
+import com.tzp.myWebTest.util.PageUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -16,7 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/esTest")
@@ -37,7 +40,7 @@ public class TestEsController {
 
     @ApiOperation("添加一个新文档")
     @PostMapping("/addNewDocument")
-    public MsgUtil addNewDocument(@RequestBody EsTest es) {
+    public MsgUtil<Object> addNewDocument(@RequestBody EsTest es) {
         try {
             esTestDocumentService.createOneDocument(ES_TEST_DATA, null, es);
             return MsgUtil.success("添加成功", es);
@@ -53,7 +56,7 @@ public class TestEsController {
 
     @ApiOperation("批量添加新文档")
     @PostMapping("/addNewDocumentByBath")
-    public MsgUtil addNewDocumentByBath(@RequestBody List<EsTest> list) {
+    public MsgUtil<Object> addNewDocumentByBath(@RequestBody List<EsTest> list) {
         try {
             esTestDocumentService.batchCreate(ES_TEST_DATA, list);
             return MsgUtil.success("添加成功");
@@ -69,7 +72,7 @@ public class TestEsController {
 
     @ApiOperation("通过json字符串的方式添加文档")
     @PostMapping("/addNewDocumentByJson")
-    public MsgUtil addNewDocumentByJson(@RequestBody String jsonString) {
+    public MsgUtil<Object> addNewDocumentByJson(@RequestBody String jsonString) {
         try {
             esTestDocumentService.createByJson(ES_TEST_DATA, null, jsonString);
             return MsgUtil.success("添加成功");
@@ -81,15 +84,16 @@ public class TestEsController {
 
     @ApiOperation("查询文档")
     @PostMapping("/getDocument")
-    public MsgUtil getDocument(@RequestBody EsQueryDTO dto) {
+    public MsgUtil<Object> getDocument(@RequestBody EsQueryDTO<EsTest> dto) {
         try {
-            List<EsTest> esTests;
+            Map<String, Object> esTests;
+            dto.setIndexName(ES_TEST_DATA);
             if (StringUtils.isBlank(dto.getQueryString())) {
-                esTests = esTestDocumentService.searchByPage(ES_TEST_DATA, dto.getPageNum(), dto.getPageSize(), EsTest.class);
+                esTests = esTestDocumentService.searchByPage(dto);
             } else {
-                esTests = esTestDocumentService.searchByQueryString(ES_TEST_DATA, dto.getQueryString(), dto.getPageNum(), dto.getPageSize(), EsTest.class, dto.getAnalyzerType());
+                esTests = esTestDocumentService.searchByQueryString(dto);
             }
-            return MsgUtil.success("查询成功", esTests);
+            return MsgUtil.success("查询成功", esTests.get("data"), (PageUtil) esTests.get("page"));
         } catch (Exception e) {
             e.printStackTrace();
             return MsgUtil.fail("查询失败", e.getMessage());
@@ -99,7 +103,7 @@ public class TestEsController {
     @EnableAsync
     @ApiOperation("多线程添加")
     @PostMapping("/addNewDocumentByBathAndAsync")
-    public MsgUtil addNewDocumentByBathAndAsync(@RequestBody List<EsTest> list) {
+    public MsgUtil<Object> addNewDocumentByBathAndAsync(@RequestBody List<EsTest> list) {
         try {
             testService.demo(list);
             return MsgUtil.success("添加成功");
@@ -112,21 +116,38 @@ public class TestEsController {
     @ApiOperation("查询异步接口消息")
     @PostMapping("/getAsyncMsg")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "当时返回的检索id", required = true, dataType = "string", paramType = "query", defaultValue = "")
+            @ApiImplicitParam(name = "id", value = "当时返回的检索id", required = true, dataType = "string", paramType = "query", defaultValue = "string类型值")
     })
-    public MsgUtil getAsyncMsg(String id) {
+    public MsgUtil<Object> getAsyncMsg(String id) {
         AsyncMsgUtil asyncMsg = asyncService.findAsyncMsgUtil(id);
         return MsgUtil.success("请求成功", asyncMsg);
     }
 
     @ApiOperation("测试反射")
     @GetMapping("/test")
-    public MsgUtil test() throws Exception {
+    public MsgUtil<Object> test() throws Exception {
         EsTest esTest = new EsTest();
-        esTest.setAge("18");
+        esTest.setAge(18L);
         esTest.setSex("男");
-        List<EsTest> list = esTestDocumentService.searchByQueryObject(ES_TEST_DATA, esTest, "为什么", 0, 1, EsTest.class, "null");
-        return MsgUtil.success("查询成功", list);
+        EsQueryDTO<EsTest> esQueryDTO = new EsQueryDTO<>();
+        esQueryDTO.setIndexName(ES_TEST_DATA);
+//        esQueryDTO.setQueryObject(esTest);
+        esQueryDTO.setQueryString("为什么");
+        esQueryDTO.setPageNum(1);
+        esQueryDTO.setPageSize(50);
+        Map<String, Object> matchMap = new HashMap<>();
+        matchMap.put("name", "zhangsan");
+        esQueryDTO.setMatchMap(matchMap);
+        Map<String, Object> termMap = new HashMap<>();
+        termMap.put("sex", "男");
+        esQueryDTO.setTermMap(termMap);
+        esQueryDTO.setRangeField("score");
+        esQueryDTO.setStartValue("60");
+        esQueryDTO.setEndValue("61");
+        esQueryDTO.setOrderField("age");
+        esQueryDTO.setQueryClazz(EsTest.class);
+        Map<String, Object> esTests = esTestDocumentService.searchByQueryObject(esQueryDTO);
+        return MsgUtil.success("查询成功", esTests.get("data"), (PageUtil) esTests.get("page"));
     }
 
 }

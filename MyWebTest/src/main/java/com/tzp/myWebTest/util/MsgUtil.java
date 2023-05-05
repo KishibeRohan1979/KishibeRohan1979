@@ -18,6 +18,16 @@ public class MsgUtil<T> implements Serializable {
 
     private T data;
 
+    private PageUtil page;
+
+    public MsgUtil(Boolean flag, Integer code, String message, T data, PageUtil page) {
+        this.flag = flag;
+        this.code = code;
+        this.message = message;
+        this.data = data;
+        this.page = page;
+    }
+
     public MsgUtil(Boolean flag, Integer code, String message, T data) {
         this.flag = flag;
         this.code = code;
@@ -39,6 +49,10 @@ public class MsgUtil<T> implements Serializable {
 
     public static<T> MsgUtil<T> success (String message, T data) {
         return new MsgUtil<>(true, 0, message, data);
+    }
+
+    public static<T> MsgUtil<T> success (String message, T data, PageUtil page) {
+        return new MsgUtil<>(true, 0, message, data, page);
     }
 
     public static<T> MsgUtil<T> fail () {

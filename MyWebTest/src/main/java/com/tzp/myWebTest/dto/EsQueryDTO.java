@@ -6,6 +6,7 @@ import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class EsQueryDTO<T> {
@@ -13,14 +14,23 @@ public class EsQueryDTO<T> {
     @ApiModelProperty(value = "索引名称", name = "indexName")
     private String indexName;
 
+    @ApiModelProperty(value = "分词搜索关键字对象类型", name = "queryClazz")
+    private Class<T> queryClazz;
+
     @ApiModelProperty(value = "分词搜索关键字对象，可以通过传一组key-value来精确查询", name = "queryObject")
     private T queryObject;
 
     @ApiModelProperty(value = "分词搜索关键字值", name = "queryString")
     private String queryString;
 
-    @ApiModelProperty(value = "分词搜索匹配字段", name = "queryFileds")
+    @ApiModelProperty(value = "分词搜索匹配字段", name = "queryFields")
     private List<String> queryFields;
+
+    @ApiModelProperty(value = "分词搜索匹配字段及其字段值", name = "matchMap")
+    private Map<String, Object> matchMap;
+
+    @ApiModelProperty(value = "精确搜索匹配字段及其字段值", name = "termMap")
+    private Map<String, Object> termMap;
 
     @ApiModelProperty(value = "页码", name = "pageNum", dataType="int", notes="当前页码", required=true)
     private Integer pageNum;
@@ -31,7 +41,7 @@ public class EsQueryDTO<T> {
     @ApiModelProperty(value = "排序字段", name = "orderField")
     private String orderField;
 
-    @ApiModelProperty(value = "排序方式 Asc/Desc", name = "orderType")
+    @ApiModelProperty(value = "排序方式 asc/desc", name = "orderType")
     private String orderType;
 
     @ApiModelProperty(value = "高亮搜索字段", name = "highlightFields")

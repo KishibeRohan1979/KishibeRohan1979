@@ -1,8 +1,10 @@
 package com.tzp.myWebTest.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.tzp.myWebTest.dto.EsQueryDTO;
 import com.tzp.myWebTest.service.EsDocumentService;
 import com.tzp.myWebTest.util.AnalyzerType;
+import com.tzp.myWebTest.util.PageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -24,6 +26,10 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -162,25 +168,22 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
     /**
      * 分页条件查询
      *
-     * @param idxName  索引名
-     * @param queryString 查询关键字
-     * @param pageNo   当前页
-     * @param pageSize 每页多少条数据
-     * @param clazz    clazz  封装的实现
+     * @param esQueryDTO  查询类
      */
     @Override
-    public List<T> searchByQueryString(String idxName, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz, String analyzerType) throws IOException {
+    public Map<String, Object> searchByQueryString(EsQueryDTO<T> esQueryDTO) throws IOException {
 
-        List<T> resultList = new ArrayList<>();
+        Integer pageNo = esQueryDTO.getPageNum();
+        Integer pageSize = esQueryDTO.getPageSize();
         // 1.创建查询请求对象
-        SearchRequest searchRequest = new SearchRequest();
+        SearchRequest searchRequest = new SearchRequest(esQueryDTO.getIndexName());
         // 2.构建搜索条件
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         // (1)查询条件 使用QueryBuilders工具类创建
         // 多字段模糊查询
         String[] fields = {"*"}; // 查询所有字符串类型的字段
-        analyzerType = AnalyzerType.getAnalyzerType(analyzerType);
-        queryString = AnalyzerType.deleteNull(queryString);
+        String analyzerType = AnalyzerType.getAnalyzerType(esQueryDTO.getAnalyzerType());
+        String queryString = AnalyzerType.deleteNull(esQueryDTO.getQueryString());
         QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(queryString, fields).analyzer(analyzerType);
         searchSourceBuilder.from(pageNo * pageSize);
         searchSourceBuilder.size(pageSize);
@@ -199,8 +202,8 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         // 4.客户端查询请求
         SearchResponse search = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         // 5.查看返回结果
-        return getResultList(search, clazz);
-
+        List<T> resultList = getResultList(search, esQueryDTO.getQueryClazz());
+        return getResultMap(resultList, search, pageSize, pageNo);
     }
 
     private List<T> getResultList(SearchResponse search, Class<T> clazz) {
@@ -234,16 +237,15 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
     /**
      * 分页查询
      *
-     * @param idxName  索引名
-     * @param pageNo   当前页
-     * @param pageSize 每页多少条数据
-     * @param clazz    clazz  封装的实现
+     * @param esQueryDTO 查询类
      */
     @Override
-    public List<T> searchByPage(String idxName, Integer pageNo, Integer pageSize, Class<T> clazz) throws IOException{
+    public Map<String, Object> searchByPage(EsQueryDTO<T> esQueryDTO) throws IOException{
+        Integer pageNo = esQueryDTO.getPageNum();
+        Integer pageSize = esQueryDTO.getPageSize();
         List<T> resultList = new ArrayList<>();
         // 1.创建查询请求对象
-        SearchRequest searchRequest = new SearchRequest();
+        SearchRequest searchRequest = new SearchRequest(esQueryDTO.getIndexName());
 
         // 2.构建搜索条件
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -260,72 +262,107 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         SearchHit[] hitsArray = hits.getHits();
         for (SearchHit hit : hitsArray) {
             Map<String, Object> map = hit.getSourceAsMap();
-            resultList.add(JSON.parseObject(JSON.toJSONString(map), clazz));
+            resultList.add(JSON.parseObject(JSON.toJSONString(map), esQueryDTO.getQueryClazz()));
         }
-        return resultList;
+        return getResultMap(resultList, search, pageSize, pageNo);
     }
 
     /**
      * 根据对象查询
      *
-     * @param idxName  索引名
-     * @param t        对象
-     * @param pageNo   当前页
-     * @param pageSize 每页多少条数据
-     * @param clazz    clazz  封装的实现
+     * @param esQueryDTO 查询类
      */
     @Override
-    public List<T> searchByQueryObject(String idxName, T t, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz, String analyzerType) throws Exception {
-        List<T> resultList = new ArrayList<>();
+    public Map<String, Object> searchByQueryObject(EsQueryDTO<T> esQueryDTO) throws Exception {
+        Integer pageNo = esQueryDTO.getPageNum();
+        Integer pageSize = esQueryDTO.getPageSize();
         // 1.创建查询请求对象
-        SearchRequest searchRequest = new SearchRequest(idxName);
+        SearchRequest searchRequest = new SearchRequest(esQueryDTO.getIndexName());
         // 2.构建搜索条件
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         // (1)查询条件 使用QueryBuilders工具类创建
         // 多字段模糊查询
         String[] fields = {"*"}; // 查询所有字符串类型的字段
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (!StringUtils.isBlank(queryString)) {
-            analyzerType = AnalyzerType.getAnalyzerType(analyzerType);
-            queryString = AnalyzerType.deleteNull(queryString);
+        // 多字段模糊查询
+        String analyzerType = AnalyzerType.getAnalyzerType(esQueryDTO.getAnalyzerType());
+        if (!StringUtils.isBlank(esQueryDTO.getQueryString())) {
+            String queryString = AnalyzerType.deleteNull(esQueryDTO.getQueryString());
             // 设置查询条件
             MultiMatchQueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(queryString, fields)
                     .analyzer(analyzerType);
             searchSourceBuilder.query(boolQueryBuilder.must(queryBuilder));
         }
-        // (2) 精确匹配和范围查询过滤条件
-        Map<String, Object> javaMap = new HashMap<>();
-        // 利用Java反射获取泛型t的属性
-        Class<?> tClass = t.getClass();
-        Field[] javaFields = tClass.getDeclaredFields();
-        for (Field field : javaFields) {
-            String attributeName = field.getName();
-            Class<?> attributeType = field.getType();
-            System.out.println("属性名字：" + attributeName);
-            System.out.println("属性类型：" + attributeType);
-            // 转化type为自定义对象
+        // 精确查询
+        if (esQueryDTO.getQueryObject() != null) {
+            // (2) 精确匹配和范围查询过滤条件
+            Map<String, Object> javaMap = new HashMap<>();
+            // 利用Java反射获取泛型t的属性
+            Class<?> tClass = esQueryDTO.getQueryObject().getClass();
+            Field[] javaFields = tClass.getDeclaredFields();
+            for (Field field : javaFields) {
+                String attributeName = field.getName();
+                Class<?> attributeType = field.getType();
+                System.out.println("属性名字：" + attributeName);
+                System.out.println("属性类型：" + attributeType);
+                // 转化type为自定义对象
 //            Object object = type.getDeclaredConstructor().newInstance();
-            // 获取get...（get属性）方法
-            Method getNameMethod = t.getClass().getMethod("get"+ capitalizeFirstLetter(attributeName));
-            // 调用get...（get属性）方法
-            Object nameValue = getNameMethod.invoke(t);
-            System.out.println("这个字段是空值？" + (null == nameValue));
-            if ( null != nameValue ) {
-                javaMap.put(attributeName, nameValue);
+                // 获取get...（get属性）方法
+                Method getNameMethod = tClass.getMethod("get"+ capitalizeFirstLetter(attributeName));
+                // 调用get...（get属性）方法
+                Object nameValue = getNameMethod.invoke(esQueryDTO.getQueryObject());
+                System.out.println("这个字段是空值？" + (null == nameValue));
+                if ( null != nameValue ) {
+                    javaMap.put(attributeName, nameValue);
+                }
+                System.out.println(attributeName + "：" + nameValue);
+                System.out.println("============================================");
             }
-            System.out.println(attributeName + "：" + nameValue);
-            System.out.println("============================================");
+            // 精确匹配字段
+            for (Map.Entry<String, Object> entry : javaMap.entrySet()) {
+                TermQueryBuilder termQuery = QueryBuilders.termQuery(entry.getKey(), entry.getValue());
+                boolQueryBuilder.filter(termQuery);
+            }
         }
-        // 精确匹配字段
-        for (Map.Entry<String, Object> entry : javaMap.entrySet()) {
-            TermQueryBuilder termQuery = QueryBuilders.termQuery(entry.getKey(), entry.getValue());
-            boolQueryBuilder.filter(termQuery);
+        // 排序查询
+        if (!StringUtils.isBlank(esQueryDTO.getOrderField())) {
+            SortBuilder<FieldSortBuilder> sortBuilder = SortBuilders.fieldSort(esQueryDTO.getOrderField());
+            if ( "asc".equals(esQueryDTO.getOrderType()) ) {
+                sortBuilder.order(SortOrder.ASC);
+            } else {
+                sortBuilder.order(SortOrder.DESC);
+            }
+            searchSourceBuilder.sort(sortBuilder);
         }
-        // 范围查询过滤条件
-        // 注意：这里age是一个数字类型的字段，需要用RangeQueryBuilder构建范围查询过滤条件
-//        boolQueryBuilder.filter(QueryBuilders.rangeQuery("age").lte(18));
+        // 范围查询
+        if (!StringUtils.isBlank(esQueryDTO.getRangeField())) {
+            RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(esQueryDTO.getRangeField()).gte(esQueryDTO.getStartValue()).lt(esQueryDTO.getEndValue());
+            boolQueryBuilder.filter(rangeQueryBuilder);
+        }
+        // 模糊查询字段
+        if (esQueryDTO.getMatchMap() != null) {
+            System.out.println("============================模糊==========yes===========================");
+            for (Map.Entry<String, Object> entry : esQueryDTO.getMatchMap().entrySet()) {
+                System.out.println("entry.getValue():" + entry.getValue());
+                System.out.println("entry.getKey():" + entry.getKey());
+                System.out.println("======================================");
+                MultiMatchQueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(entry.getValue().toString(), entry.getKey())
+                        .analyzer(analyzerType);
+                boolQueryBuilder.filter(queryBuilder);
+            }
+        }
+        // 精确查询字段
+        if (esQueryDTO.getTermMap() != null) {
+            System.out.println("============================精确==========yes===========================");
+            for (Map.Entry<String, Object> entry : esQueryDTO.getTermMap().entrySet()) {
+                System.out.println("entry.getValue():" + entry.getValue());
+                System.out.println("entry.getKey():" + entry.getKey());
+                System.out.println("======================================");
+                TermQueryBuilder termQuery = QueryBuilders.termQuery(entry.getKey(), entry.getValue());
+                boolQueryBuilder.filter(termQuery);
+            }
+        }
         searchSourceBuilder.query(boolQueryBuilder);
-
         // (3) 高亮设置
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         highlightBuilder.field("*"); // 高亮所有字段
@@ -340,9 +377,9 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         searchRequest.source(searchSourceBuilder);
         // 5.客户端
         SearchResponse search = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-        System.out.println(searchRequest);
         // 5.查看返回结果
-        return getResultList(search, clazz);
+        List<T> resultList = getResultList(search, esQueryDTO.getQueryClazz());
+        return getResultMap(resultList, search, pageSize, pageNo);
     }
 
     /**
@@ -357,8 +394,15 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
+    private static <T> Map<String, Object> getResultMap(List<T> resultList, SearchResponse search, Integer pageSize, Integer pageNo) {
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("data", resultList);
+        resultMap.put("page", PageUtil.getPage((int) search.getHits().getTotalHits().value, pageSize, pageNo));
+        return resultMap;
+    }
+
     @Override
-    public boolean updateById(String indexName, T t, String id, Class clazz) {
+    public boolean updateById(String indexName, T t, String id, Class<T> clazz) {
 
         return false;
     }

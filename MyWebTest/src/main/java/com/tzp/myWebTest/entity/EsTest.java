@@ -18,7 +18,10 @@ public class EsTest implements Serializable {
     private String sex;
 
     @ApiModelProperty(value = "年龄", name = "age")
-    private String age;
+    private Long age;
+
+    @ApiModelProperty(value = "成绩", name = "score")
+    private Long score;
 
     @ApiModelProperty(value = "个人简介", name = "sign")
     private String sign;

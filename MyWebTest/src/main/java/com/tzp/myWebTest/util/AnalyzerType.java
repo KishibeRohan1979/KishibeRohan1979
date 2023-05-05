@@ -8,12 +8,10 @@ public class AnalyzerType {
 
     // 判断一下用什么分词器
     public static String getAnalyzerType(String type) {
-        switch (type) {
-            case "fastest":
-                return IK_SMART;
-            default:
-                return IK_MAX_WORD;
+        if ("fastest".equals(type)) {
+            return IK_SMART;
         }
+        return IK_MAX_WORD;
     }
 
     // 查询的时候把空格删掉

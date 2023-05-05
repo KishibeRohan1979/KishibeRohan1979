@@ -124,10 +124,9 @@ public class TestEsController {
     public MsgUtil test() throws Exception {
         EsTest esTest = new EsTest();
         esTest.setAge("18");
-        esTest.setId("22");
-        esTest.setName("哈哈");
-        esTestDocumentService.searchByQueryObject(ES_TEST_DATA, esTest, 1, 1, EsTest.class);
-        return MsgUtil.success();
+        esTest.setSex("男");
+        List<EsTest> list = esTestDocumentService.searchByQueryObject(ES_TEST_DATA, esTest, "为什么", 0, 1, EsTest.class, "null");
+        return MsgUtil.success("查询成功", list);
     }
 
 }

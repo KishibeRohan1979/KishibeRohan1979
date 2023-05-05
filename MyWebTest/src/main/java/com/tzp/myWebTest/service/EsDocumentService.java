@@ -94,7 +94,7 @@ public interface EsDocumentService<T> {
      * @param pageSize 每页多少条数据
      * @param clazz    clazz  封装的实现
      */
-    List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz) throws Exception;
+    List<T> searchByQueryObject(String idxName, T t, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz, String analyzerType) throws Exception;
 
     /**
      * 修改索引的数据

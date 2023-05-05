@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.tzp.myWebTest.service.EsDocumentService;
 import com.tzp.myWebTest.util.AnalyzerType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -178,6 +180,7 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         // 多字段模糊查询
         String[] fields = {"*"}; // 查询所有字符串类型的字段
         analyzerType = AnalyzerType.getAnalyzerType(analyzerType);
+        queryString = AnalyzerType.deleteNull(queryString);
         QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(queryString, fields).analyzer(analyzerType);
         searchSourceBuilder.from(pageNo * pageSize);
         searchSourceBuilder.size(pageSize);
@@ -194,39 +197,38 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         // 3.添加条件到请求
         searchRequest.source(searchSourceBuilder);
         // 4.客户端查询请求
-        System.out.println(searchRequest);
         SearchResponse search = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        // 5.查看返回结果
+        return getResultList(search, clazz);
+
+    }
+
+    private List<T> getResultList(SearchResponse search, Class<T> clazz) {
+        List<T> resultList = new ArrayList<>();
         // 5.查看返回结果
         SearchHits hits = search.getHits();
         SearchHit[] hitsArray = hits.getHits();
+        // 文档的循环
         for (SearchHit hit : hitsArray) {
             Map<String, Object> map = hit.getSourceAsMap();
-            System.out.println(map);
-            System.out.println("================================================");
             // 获取高亮字段
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            // 高亮字段的循环
             for (Map.Entry<String, HighlightField> entry : highlightFields.entrySet()) {
                 String fieldName = entry.getKey();
-                System.out.println("fieldName:==" + fieldName);
-                System.out.println("================================================");
                 HighlightField highlight = entry.getValue();
-                System.out.println("highlight:==" + highlight);
-                System.out.println("================================================");
                 Text[] fragments = highlight.fragments();
-                System.out.println("fragments:==" + fragments);
                 StringBuilder fragmentString = new StringBuilder();
+                // 字段（例：id、name什么）的循环
                 for (Text fragment : fragments) {
                     fragmentString.append(fragment);
                 }
                 // 替换原有字段值
-                String[] point = (fieldName+".").split("\\.");
-                String beforePoint = point[0];
-                map.put(beforePoint, fragmentString.toString());
+                map.put(fieldName, fragmentString.toString());
             }
             resultList.add(JSON.parseObject(JSON.toJSONString(map), clazz));
         }
         return resultList;
-
     }
 
     /**
@@ -273,11 +275,30 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
      * @param clazz    clazz  封装的实现
      */
     @Override
-    public List<T> searchByQueryObject(String idxName, T t, Integer pageNo, Integer pageSize, Class<T> clazz) throws Exception {
+    public List<T> searchByQueryObject(String idxName, T t, String queryString, Integer pageNo, Integer pageSize, Class<T> clazz, String analyzerType) throws Exception {
+        List<T> resultList = new ArrayList<>();
+        // 1.创建查询请求对象
+        SearchRequest searchRequest = new SearchRequest(idxName);
+        // 2.构建搜索条件
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        // (1)查询条件 使用QueryBuilders工具类创建
+        // 多字段模糊查询
+        String[] fields = {"*"}; // 查询所有字符串类型的字段
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        if (!StringUtils.isBlank(queryString)) {
+            analyzerType = AnalyzerType.getAnalyzerType(analyzerType);
+            queryString = AnalyzerType.deleteNull(queryString);
+            // 设置查询条件
+            MultiMatchQueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(queryString, fields)
+                    .analyzer(analyzerType);
+            searchSourceBuilder.query(boolQueryBuilder.must(queryBuilder));
+        }
+        // (2) 精确匹配和范围查询过滤条件
+        Map<String, Object> javaMap = new HashMap<>();
         // 利用Java反射获取泛型t的属性
         Class<?> tClass = t.getClass();
-        Field[] fields = tClass.getDeclaredFields();
-        for (Field field : fields) {
+        Field[] javaFields = tClass.getDeclaredFields();
+        for (Field field : javaFields) {
             String attributeName = field.getName();
             Class<?> attributeType = field.getType();
             System.out.println("属性名字：" + attributeName);
@@ -288,11 +309,40 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
             Method getNameMethod = t.getClass().getMethod("get"+ capitalizeFirstLetter(attributeName));
             // 调用get...（get属性）方法
             Object nameValue = getNameMethod.invoke(t);
-            System.out.println(null == nameValue);
-            System.out.println(nameValue);
+            System.out.println("这个字段是空值？" + (null == nameValue));
+            if ( null != nameValue ) {
+                javaMap.put(attributeName, nameValue);
+            }
+            System.out.println(attributeName + "：" + nameValue);
+            System.out.println("============================================");
         }
+        // 精确匹配字段
+        for (Map.Entry<String, Object> entry : javaMap.entrySet()) {
+            TermQueryBuilder termQuery = QueryBuilders.termQuery(entry.getKey(), entry.getValue());
+            boolQueryBuilder.filter(termQuery);
+        }
+        // 范围查询过滤条件
+        // 注意：这里age是一个数字类型的字段，需要用RangeQueryBuilder构建范围查询过滤条件
+//        boolQueryBuilder.filter(QueryBuilders.rangeQuery("age").lte(18));
+        searchSourceBuilder.query(boolQueryBuilder);
 
-        return null;
+        // (3) 高亮设置
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field("*"); // 高亮所有字段
+        highlightBuilder.requireFieldMatch(false); // 多个字段时，匹配不同的字段时需要匹配高亮
+        highlightBuilder.preTags("<font color='red'>"); // 高亮前缀
+        highlightBuilder.postTags("</font>"); // 高亮后缀
+        highlightBuilder.numOfFragments(0);// 不进行限制，完整显示所有高亮内容
+        searchSourceBuilder.highlighter(highlightBuilder);
+        // 4.添加条件到请求
+        searchSourceBuilder.from(pageNo * pageSize);
+        searchSourceBuilder.size(pageSize);
+        searchRequest.source(searchSourceBuilder);
+        // 5.客户端
+        SearchResponse search = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        System.out.println(searchRequest);
+        // 5.查看返回结果
+        return getResultList(search, clazz);
     }
 
     /**

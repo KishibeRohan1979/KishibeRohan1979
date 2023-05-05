@@ -341,11 +341,7 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         }
         // 模糊查询字段
         if (esQueryDTO.getMatchMap() != null) {
-            System.out.println("============================模糊==========yes===========================");
             for (Map.Entry<String, Object> entry : esQueryDTO.getMatchMap().entrySet()) {
-                System.out.println("entry.getValue():" + entry.getValue());
-                System.out.println("entry.getKey():" + entry.getKey());
-                System.out.println("======================================");
                 MultiMatchQueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(entry.getValue().toString(), entry.getKey())
                         .analyzer(analyzerType);
                 boolQueryBuilder.filter(queryBuilder);
@@ -353,11 +349,7 @@ public class EsDocumentServiceImpl<T> implements EsDocumentService<T> {
         }
         // 精确查询字段
         if (esQueryDTO.getTermMap() != null) {
-            System.out.println("============================精确==========yes===========================");
             for (Map.Entry<String, Object> entry : esQueryDTO.getTermMap().entrySet()) {
-                System.out.println("entry.getValue():" + entry.getValue());
-                System.out.println("entry.getKey():" + entry.getKey());
-                System.out.println("======================================");
                 TermQueryBuilder termQuery = QueryBuilders.termQuery(entry.getKey(), entry.getValue());
                 boolQueryBuilder.filter(termQuery);
             }

@@ -38,7 +38,7 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
         int totalComment = Integer.parseInt(countComment);
         int totalPage = BiliBiliUtil.getPageInfo(totalComment, 49);
         System.out.println("totalPage:" + totalPage + ",length:" + totalComment);
-        for (int i = 953; i <= totalPage; i++) {
+        for (int i = 1; i <= totalPage; i++) {
             params.put("pn", String.valueOf(i));
             String url = BiliBiliUtil.getUrlByMap(BiliBiliUtil.RelyURL, params);
             System.out.println(url);

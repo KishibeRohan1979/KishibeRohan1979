@@ -50,6 +50,15 @@ public class AsyncServiceImpl implements AsyncService {
     public void updateProgress(String per) {
         AsyncMsgUtil asyncMsg = AsyncHolder.get();
         asyncMsg.setProgress(per);
+        asyncMsg.setResult("任务执行中。。。");
+        // 设置变量值的过期时间，60分钟
+        redisTemplate.opsForValue().set(asyncMsg.getId(), asyncMsg, 60, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void updateMsg(Object result) {
+        AsyncMsgUtil asyncMsg = AsyncHolder.get();
+        asyncMsg.setResult(result);
         // 设置变量值的过期时间，60分钟
         redisTemplate.opsForValue().set(asyncMsg.getId(), asyncMsg, 60, TimeUnit.MINUTES);
     }

@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface BilibiliCommentService {
 
-    void addComment(List<BilibiliComment> comments, EsQueryDTO<BilibiliComment> dto);
+    void addComment(String bvid);
 
 }

@@ -168,85 +168,89 @@ public class BiliBiliUtil {
             case "0":
                 resultMap.put("code", "0");
                 HashMap<String, Object> dataJsonMap = JSON.parseObject(resultJsonMap.get("data").toString(), HashMap.class);
-                ArrayList<Map<String, Object>> replies = JSON.parseObject(dataJsonMap.get("replies").toString(), ArrayList.class);
-                for (Map<String, Object> replie : replies) {
-                    Map<String, Object> map = new HashMap<>();
-                    // 评论的id
-                    map.put("rpid", replie.get("rpid"));
-                    // 评论的创建时间
-                    map.put("ctime", replie.get("ctime"));
-                    // 评论的回复数量
-                    map.put("rcount", replie.get("rcount"));
-                    // 评论的点赞数
-                    map.put("like", replie.get("like"));
-                    HashMap<String, Object> memberJsonMap = JSON.parseObject(replie.get("member").toString(), HashMap.class);
-                    map.put("userid", memberJsonMap.get("mid"));
-                    map.put("uname", memberJsonMap.get("uname"));
-                    map.put("sex", memberJsonMap.get("sex"));
-                    // 记录个人简介
-                    map.put("sign", memberJsonMap.get("sign"));
-                    // 记录用户等级
-                    HashMap<String, Object> levelInfoJsonMap = JSON.parseObject(memberJsonMap.get("level_info").toString(), HashMap.class);
-                    map.put("userLevel", levelInfoJsonMap.get("current_level"));
-                    // 记录用户渲染信息
-                    HashMap<String, Object> userSailingJsonMap = JSON.parseObject(memberJsonMap.get("user_sailing").toString(), HashMap.class);
-                    map.put("user_sailing", userSailingJsonMap);
-                    // 记录头像地址
-                    map.put("avatar", memberJsonMap.get("avatar"));
-                    // 记录是不是老粉
-                    map.put("isContractor", memberJsonMap.get("is_contractor"));
-                    // 记录老粉牌子称呼
-                    map.put("contractDesc", memberJsonMap.get("contract_desc"));
-                    // 记录会员信息（type=0 非会员， type=1 大会员， type=2 年度大会员），需要注意的是4月1日可能会不同，但是我没办法测试了
-                    HashMap<String, Object> vipJsonMap = JSON.parseObject(memberJsonMap.get("vip").toString(), HashMap.class);
-                    map.put("vipType", vipJsonMap.get("vipType"));
-                    // 记录现在是不是会员
-                    map.put("vipStatus", vipJsonMap.get("vipStatus"));
-                    // 记录vip的渲染信息
-                    map.put("vip_label", vipJsonMap.get("label"));
-                    // 记录粉丝牌信息
-                    HashMap<String, Object> fansDetailJsonMap;
-                    if (memberJsonMap.get("fans_detail") != null) {
-                        fansDetailJsonMap = JSON.parseObject(memberJsonMap.get("fans_detail").toString(), HashMap.class);
-                        map.put("fans_detail", fansDetailJsonMap);
-                        // 记录粉丝牌的等级
-                        map.put("fansLevel", fansDetailJsonMap.get("level"));
-                        // 记录粉丝牌的名字
-                        map.put("fansName", fansDetailJsonMap.get("medal_name"));
-                    } else {
-                        map.put("fans_detail", null);
-                        // 记录粉丝牌的等级
-                        map.put("fansLevel", "0");
-                        // 记录粉丝牌的名字
-                        map.put("fansName", "");
+                if (dataJsonMap.get("replies") != null) {
+                    ArrayList<Map<String, Object>> replies = JSON.parseObject(dataJsonMap.get("replies").toString(), ArrayList.class);
+                    for (Map<String, Object> replie : replies) {
+                        Map<String, Object> map = new HashMap<>();
+                        // 评论的id
+                        map.put("rpid", replie.get("rpid"));
+                        // 评论的创建时间
+                        map.put("ctime", replie.get("ctime"));
+                        // 评论的回复数量
+                        map.put("rcount", replie.get("rcount"));
+                        // 评论的点赞数
+                        map.put("like", replie.get("like"));
+                        HashMap<String, Object> memberJsonMap = JSON.parseObject(replie.get("member").toString(), HashMap.class);
+                        map.put("userid", memberJsonMap.get("mid"));
+                        map.put("uname", memberJsonMap.get("uname"));
+                        map.put("sex", memberJsonMap.get("sex"));
+                        // 记录个人简介
+                        map.put("sign", memberJsonMap.get("sign"));
+                        // 记录用户等级
+                        HashMap<String, Object> levelInfoJsonMap = JSON.parseObject(memberJsonMap.get("level_info").toString(), HashMap.class);
+                        map.put("userLevel", levelInfoJsonMap.get("current_level"));
+                        // 记录用户渲染信息
+                        HashMap<String, Object> userSailingJsonMap = JSON.parseObject(memberJsonMap.get("user_sailing").toString(), HashMap.class);
+                        map.put("userSailing", userSailingJsonMap);
+                        // 记录头像地址
+                        map.put("avatar", memberJsonMap.get("avatar"));
+                        // 记录是不是老粉
+                        map.put("isContractor", memberJsonMap.get("is_contractor"));
+                        // 记录老粉牌子称呼
+                        map.put("contractDesc", memberJsonMap.get("contract_desc"));
+                        // 记录会员信息（type=0 非会员， type=1 大会员， type=2 年度大会员），需要注意的是4月1日可能会不同，但是我没办法测试了
+                        HashMap<String, Object> vipJsonMap = JSON.parseObject(memberJsonMap.get("vip").toString(), HashMap.class);
+                        map.put("vipType", vipJsonMap.get("vipType"));
+                        // 记录现在是不是会员
+                        map.put("vipStatus", vipJsonMap.get("vipStatus"));
+                        // 记录vip的渲染信息
+                        map.put("vipLabel", vipJsonMap.get("label"));
+                        // 记录粉丝牌信息
+                        HashMap<String, Object> fansDetailJsonMap;
+                        if (memberJsonMap.get("fans_detail") != null) {
+                            fansDetailJsonMap = JSON.parseObject(memberJsonMap.get("fans_detail").toString(), HashMap.class);
+                            map.put("fansDetail", fansDetailJsonMap);
+                            // 记录粉丝牌的等级
+                            map.put("fansLevel", fansDetailJsonMap.get("level"));
+                            // 记录粉丝牌的名字
+                            map.put("fansName", fansDetailJsonMap.get("medal_name"));
+                        } else {
+                            map.put("fansDetail", null);
+                            // 记录粉丝牌的等级
+                            map.put("fansLevel", "0");
+                            // 记录粉丝牌的名字
+                            map.put("fansName", "");
+                        }
+                        // 记录评论的信息
+                        HashMap<String, Object> contentJsonMap = JSON.parseObject(replie.get("content").toString(), HashMap.class);
+                        map.put("thisUserMessage", contentJsonMap.get("message"));
+                        // 记录评论的渲染信息
+                        map.put("messageEmote", contentJsonMap.get("emote"));
+                        // 评论中发布的图片
+                        map.put("pictures", contentJsonMap.get("pictures"));
+                        // 记录up主和这个评论的互动
+                        HashMap<String, Object> upActionJsonMap = JSON.parseObject(replie.get("up_action").toString(), HashMap.class);
+                        // 记录up是否点赞了这个评论
+                        map.put("isUpLikeThisMessage", upActionJsonMap.get("like"));
+                        // 记录up主是否回复了这个评论
+                        map.put("isUpReplyThisMessage", upActionJsonMap.get("reply"));
+                        // 记录视频的avid
+                        map.put("avid", replie.get("oid"));
+                        // 评论是否可见（1，可见；0，不可见）
+                        map.put("isDelete", "1");
+                        JSONObject json = new JSONObject(map);
+                        resultList.add(json);
                     }
-                    // 记录评论的信息
-                    HashMap<String, Object> contentJsonMap = JSON.parseObject(replie.get("content").toString(), HashMap.class);
-                    map.put("thisUserMessage", contentJsonMap.get("message"));
-                    // 记录评论的渲染信息
-                    map.put("message_emote", contentJsonMap.get("emote"));
-                    // 评论中发布的图片
-                    map.put("pictures", contentJsonMap.get("pictures"));
-                    // 记录up主和这个评论的互动
-                    HashMap<String, Object> upActionJsonMap = JSON.parseObject(replie.get("up_action").toString(), HashMap.class);
-                    // 记录up是否点赞了这个评论
-                    map.put("isUpLikeThisMessage", upActionJsonMap.get("like"));
-                    // 记录up主是否回复了这个评论
-                    map.put("isUpReplyThisMessage", upActionJsonMap.get("reply"));
-                    // 记录视频的avid
-                    map.put("avid", replie.get("oid"));
-                    // 评论是否可见（1，可见；0，不可见）
-                    map.put("isDelete", "1");
-                    JSONObject json = new JSONObject(map);
-                    resultList.add(json);
+                    if (replies.size() == 0) {
+                        resultMap.put("isOver", "true");
+                    } else {
+                        resultMap.put("isOver", "false");
+                    }
+                } else {
+                    resultMap.put("isOver", "true");
                 }
                 resultMap.put("resultList", resultList);
                 resultMap.put("requestMessage", "请求成功");
-                if (replies.size() == 0) {
-                    resultMap.put("isOver", "true");
-                } else {
-                    resultMap.put("isOver", "false");
-                }
                 break;
             case "-404":
                 resultMap.put("code", "-404");

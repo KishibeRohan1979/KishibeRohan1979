@@ -63,6 +63,10 @@ public class MsgUtil<T> implements Serializable {
         return new MsgUtil<>(false, -1, message, null);
     }
 
+    public static<T> MsgUtil<T> fail (Integer code, String message) {
+        return new MsgUtil<>(false, code, message, null);
+    }
+
     public static<T> MsgUtil<T> fail (String message, T data) {
         return new MsgUtil<>(false, -1, message, data);
     }

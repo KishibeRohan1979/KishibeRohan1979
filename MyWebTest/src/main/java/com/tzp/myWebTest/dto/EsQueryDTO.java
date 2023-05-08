@@ -14,6 +14,9 @@ public class EsQueryDTO<T> {
     @ApiModelProperty(value = "索引名称", name = "indexName")
     private String indexName;
 
+    @ApiModelProperty(value = "评论类型", name = "type")
+    private String type;
+
     @ApiModelProperty(value = "分词搜索关键字对象类型", name = "queryClazz")
     private Class<T> queryClazz;
 

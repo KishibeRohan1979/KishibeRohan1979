@@ -1,6 +1,7 @@
 package com.tzp.myWebTest.service.impl;
 
 import com.tzp.myWebTest.dto.EsQueryDTO;
+import com.tzp.myWebTest.dto.MapCreateDTO;
 import com.tzp.myWebTest.entity.BilibiliComment;
 import com.tzp.myWebTest.service.AsyncService;
 import com.tzp.myWebTest.service.BilibiliCommentService;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +29,10 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
     private AsyncService asyncService;
 
     @Override
-    public void addComment(String bvid) {
-        String avid = String.valueOf(AvidAndBvidUtil.bvidToAid(bvid));
-        Map<String, String> params = new HashMap<>();
-        params.put("type", "1");
-        params.put("oid", avid);
+    public void addComment(Map<String, String> params) {
         params.put("sort", "1");
         params.put("ps", "49");
-        String countComment = BiliBiliUtil.getCommentsCount(avid);
+        String countComment = BiliBiliUtil.getCommentsCount(params);
         int totalComment = Integer.parseInt(countComment);
         int totalPage = BiliBiliUtil.getPageInfo(totalComment, 49);
         System.out.println("totalPage:" + totalPage + ",length:" + totalComment);
@@ -51,7 +49,7 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
                         break;
                     } else {
                         List<BilibiliComment> resultList = (List<BilibiliComment>)map.get("resultList");
-                        esTestDocumentService.batchCreate(bvid, resultList);
+                        esTestDocumentService.batchCreate(params.get("oid"), resultList);
                         //计算百分比
                         String per = String.valueOf( ((double) i/totalPage)*100 );
                         String[] point = per.split("\\.");
@@ -74,6 +72,19 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public Map<String, String> convertMap(MapCreateDTO dto) throws IllegalAccessException {
+        Map<String, String> result = new HashMap<>();
+        Class<?> clazz = dto.getClass();
+        for (Field field : clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            String fieldValue = field.get(dto).toString();
+            result.put(fieldName, fieldValue);
+        }
+        return result;
     }
 
 }

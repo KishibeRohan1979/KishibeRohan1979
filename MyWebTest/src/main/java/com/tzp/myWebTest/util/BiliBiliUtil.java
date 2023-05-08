@@ -73,10 +73,7 @@ public class BiliBiliUtil {
     }
 
     //获取评论数总和
-    public static String getCommentsCount(String oid) {
-        Map<String, String> params = new HashMap<>();
-        params.put("type", "1");
-        params.put("oid", oid);
+    public static String getCommentsCount(Map<String, String> params) {
         String url = getUrlByMap(RelyCountURL, params);
         try {
             String result = callApiByGet(url);
@@ -281,10 +278,7 @@ public class BiliBiliUtil {
     }
 
     // 爬取指定行数（所有）的评论
-    public static List<Map<String, Object>> getAllComments(String oid, int length) {
-        Map<String, String> params = new HashMap<>();
-        params.put("type", "1");
-        params.put("oid", oid);
+    public static List<Map<String, Object>> getAllComments(Map<String, String> params, int length) {
         params.put("sort", "1");
         params.put("ps", "49");
         List<Map<String, Object>> list = new ArrayList<>();
@@ -317,13 +311,13 @@ public class BiliBiliUtil {
     }
 
     // 查询某个视频底下的前x赞评论，并非排序所有评论！！！
-    public static List<Map<String, Object>> getCommentsByOid(String oid, int returnLength) {
-        String countComment = getCommentsCount(oid);
+    public static List<Map<String, Object>> getCommentsByOid(Map<String, String> params, int returnLength) {
+        String countComment = getCommentsCount(params);
         int totalComment = Integer.parseInt(countComment);
         if (returnLength > totalComment) {
             returnLength = totalComment;
         }
-        List<Map<String, Object>> list = getAllComments(oid, totalComment);
+        List<Map<String, Object>> list = getAllComments(params, totalComment);
         // 根据点赞数量倒序（由大到小）排序
         list = getListByListDesc(list);
         //排序完毕之后，将这个list返回
@@ -345,7 +339,7 @@ public class BiliBiliUtil {
     }
 
     // 查询某个时间段内的评论
-    public static List<Map<String, Object>> getCommentsByOidAndTime(String oid, int returnLength, String startTime, String endTime) {
+    public static List<Map<String, Object>> getCommentsByOidAndTime(Map<String, String> params, int returnLength, String startTime, String endTime) {
         DateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<Map<String, Object>> resultList = new ArrayList<>();
         try {
@@ -358,12 +352,12 @@ public class BiliBiliUtil {
                 max = min;
                 min = flag;
             }
-            String countComment = getCommentsCount(oid);
+            String countComment = getCommentsCount(params);
             int totalComment = Integer.parseInt(countComment);
             if (returnLength > totalComment) {
                 returnLength = totalComment;
             }
-            List<Map<String, Object>> list = getAllComments(oid, totalComment);
+            List<Map<String, Object>> list = getAllComments(params, totalComment);
             for (Map<String, Object> map : list) {
                 long ctime = Long.parseLong(String.valueOf(map.get("ctime")));
                 if (ctime >= min && ctime <= max) {

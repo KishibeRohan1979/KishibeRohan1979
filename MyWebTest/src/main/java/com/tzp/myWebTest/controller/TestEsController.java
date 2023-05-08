@@ -5,6 +5,7 @@ import com.tzp.myWebTest.dto.EsQueryDTO;
 import com.tzp.myWebTest.entity.EsTest;
 import com.tzp.myWebTest.service.AsyncService;
 import com.tzp.myWebTest.service.EsDocumentService;
+import com.tzp.myWebTest.service.EsIndexService;
 import com.tzp.myWebTest.service.TestService;
 import com.tzp.myWebTest.util.AsyncMsgUtil;
 import com.tzp.myWebTest.util.MsgUtil;
@@ -17,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,9 @@ public class TestEsController {
 
     @Autowired
     private AsyncService asyncService;
+
+    @Autowired
+    private EsIndexService esIndexService;
 
     @ApiOperation("添加一个新文档")
     @PostMapping("/addNewDocument")
@@ -148,6 +153,62 @@ public class TestEsController {
         esQueryDTO.setQueryClazz(EsTest.class);
         Map<String, Object> esTests = esTestDocumentService.searchByQueryObject(esQueryDTO);
         return MsgUtil.success("查询成功", esTests.get("data"), (PageUtil) esTests.get("page"));
+    }
+
+    @ApiOperation("通过json创建索引")
+    @PostMapping("/createIndexByJson")
+    public MsgUtil<Object> createIndexByJson(String indexName, String json) {
+        try {
+            esIndexService.createIndex(indexName, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MsgUtil.fail("创建失败", e.getMessage());
+        }
+        return MsgUtil.success();
+    }
+
+    @ApiOperation("创建索引")
+    @PostMapping("/createIndex")
+    public MsgUtil<Object> createIndex(String indexName) {
+        try {
+            esIndexService.createIndex(indexName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MsgUtil.fail("创建失败", e.getMessage());
+        }
+        return MsgUtil.success();
+    }
+
+    @ApiOperation("查看索引是否存在")
+    @GetMapping("/isIndexExists")
+    public MsgUtil<Object> isIndexExists(String indexName) {
+        try {
+            boolean result = esIndexService.indexExists(indexName);
+            if (result) {
+                return MsgUtil.success("索引存在", true);
+            } else {
+                return MsgUtil.success("索引不存在", false);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MsgUtil.fail("查询失败", e.getMessage());
+        }
+    }
+
+    @ApiOperation("删除索引")
+    @DeleteMapping("/deleteIndex")
+    public MsgUtil<Object> deleteIndex(String indexName) {
+        try {
+            boolean result = esIndexService.deleteIndex(indexName);
+            if (result) {
+                return MsgUtil.success("删除成功", true);
+            } else {
+                return MsgUtil.success("删除失败", false);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MsgUtil.fail("删除失败", e.getMessage());
+        }
     }
 
 }

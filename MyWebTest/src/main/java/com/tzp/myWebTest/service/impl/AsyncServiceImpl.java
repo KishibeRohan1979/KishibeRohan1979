@@ -21,8 +21,8 @@ public class AsyncServiceImpl implements AsyncService {
 
     /**
      * 更新任务进度
-     * @param asyncMsg
-     * @param point
+     * @param asyncMsg 消息
+     * @param point aop
      */
     @Override
     @Async("asyncServiceExecutor")
@@ -50,7 +50,7 @@ public class AsyncServiceImpl implements AsyncService {
     public void updateProgress(String per) {
         AsyncMsgUtil asyncMsg = AsyncHolder.get();
         asyncMsg.setProgress(per);
-        asyncMsg.setResult("任务执行中。。。");
+        asyncMsg.setResult("任务执行中...");
         // 设置变量值的过期时间，60分钟
         redisTemplate.opsForValue().set(asyncMsg.getId(), asyncMsg, 60, TimeUnit.MINUTES);
     }
@@ -65,8 +65,7 @@ public class AsyncServiceImpl implements AsyncService {
 
     /**
      * 查询任务进度
-     * @param id
-     * @return
+     * @param id 查询id
      */
     @Override
     public AsyncMsgUtil findAsyncMsgUtil(String id) {

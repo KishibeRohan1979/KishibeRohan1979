@@ -16,7 +16,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,17 +53,15 @@ public class BilibiliCommentController {
 
     @EnableAsync
     @ApiOperation("多线程添加")
-    @PostMapping("/addNewDocumentByBathAndAsync")
+    @PostMapping("/addDoc")
     public MsgUtil<Object> addNewDocumentByBathAndAsync(@RequestBody MapCreateDTO dto) {
         try {
-            System.out.println(dto.getOid());
             Map<String, String> map = bilibiliCommentService.convertMap(dto);
             if ( !"11".equals(dto.getType()) ) {
                 String oid = String.valueOf(AvidAndBvidUtil.bvidToAid(dto.getOid()));
                 map.put("oid", oid);
             }
-            System.out.println(map);
-            boolean result = esIndexService.indexExists(dto.getOid());
+            boolean result = esIndexService.indexExists(map.get("oid"));
             if (result) {
                 return MsgUtil.fail(1,"该视频下的评论在本网站有缓存");
             }
@@ -90,6 +87,36 @@ public class BilibiliCommentController {
         } catch (Exception e) {
             e.printStackTrace();
             return MsgUtil.fail("查询失败", e.getMessage());
+        }
+    }
+
+    @EnableAsync
+    @ApiOperation("强行重新爬取")
+    @PostMapping("/reAdd")
+    public MsgUtil<Object> reAdd(@RequestBody MapCreateDTO dto) {
+        try {
+            Map<String, String> map = bilibiliCommentService.convertMap(dto);
+            if ( !"11".equals(dto.getType()) ) {
+                String oid = String.valueOf(AvidAndBvidUtil.bvidToAid(dto.getOid()));
+                dto.setOid(oid);
+                map.put("oid", oid);
+            }
+            boolean result = esIndexService.indexExists(dto.getOid());
+            if (result) {
+                // 判断进度有没有完成100%
+                AsyncMsgUtil asyncMsg = asyncService.findAsyncMsgUtil(dto.getOid());
+                if (!"100%".equals(asyncMsg.getProgress())) {
+                    return MsgUtil.fail("请先等待任务执行完毕");
+                }
+                // 删除索引
+                esIndexService.deleteIndex(dto.getOid());
+            }
+            esIndexService.createIndex(dto.getOid());
+            bilibiliCommentService.addComment(map);
+            return MsgUtil.success("添加成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MsgUtil.fail("添加失败", e.getMessage());
         }
     }
 

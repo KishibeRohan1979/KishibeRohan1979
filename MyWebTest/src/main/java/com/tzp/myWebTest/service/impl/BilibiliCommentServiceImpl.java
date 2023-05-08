@@ -1,12 +1,10 @@
 package com.tzp.myWebTest.service.impl;
 
-import com.tzp.myWebTest.dto.EsQueryDTO;
 import com.tzp.myWebTest.dto.MapCreateDTO;
 import com.tzp.myWebTest.entity.BilibiliComment;
 import com.tzp.myWebTest.service.AsyncService;
 import com.tzp.myWebTest.service.BilibiliCommentService;
 import com.tzp.myWebTest.service.EsDocumentService;
-import com.tzp.myWebTest.util.AvidAndBvidUtil;
 import com.tzp.myWebTest.util.BiliBiliUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +26,12 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
     @Autowired
     private AsyncService asyncService;
 
+    private volatile boolean isRunning = false;
+
+    /**
+     * 爬取评论
+     * @param params map
+     */
     @Override
     public void addComment(Map<String, String> params) {
         params.put("sort", "1");
@@ -37,6 +41,9 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
         int totalPage = BiliBiliUtil.getPageInfo(totalComment, 49);
         System.out.println("totalPage:" + totalPage + ",length:" + totalComment);
         for (int i = 1; i <= totalPage; i++) {
+            if (isRunning) {
+                break;
+            }
             params.put("pn", String.valueOf(i));
             String url = BiliBiliUtil.getUrlByMap(BiliBiliUtil.RelyURL, params);
             System.out.println(url);
@@ -74,6 +81,11 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
         }
     }
 
+    /**
+     * 把MapCreateDTO转为map
+     * @param dto 创建类
+     * @throws IllegalAccessException 转化错误
+     */
     @Override
     public Map<String, String> convertMap(MapCreateDTO dto) throws IllegalAccessException {
         Map<String, String> result = new HashMap<>();
@@ -85,6 +97,22 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
             result.put(fieldName, fieldValue);
         }
         return result;
+    }
+
+    /**
+     * 强制停止爬取
+     */
+    @Override
+    public void stop() {
+        isRunning = true;
+    }
+
+    /**
+     * 强制启动
+     */
+    @Override
+    public void start() {
+        isRunning = false;
     }
 
 }

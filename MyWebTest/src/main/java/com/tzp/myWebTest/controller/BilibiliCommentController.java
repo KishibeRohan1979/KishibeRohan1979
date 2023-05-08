@@ -91,8 +91,8 @@ public class BilibiliCommentController {
     }
 
     @EnableAsync
-    @ApiOperation("强行重新爬取")
-    @PostMapping("/reAdd")
+    @ApiOperation("强行重新爬取，现在已经废弃")
+//    @PostMapping("/reAdd")
     public MsgUtil<Object> reAdd(@RequestBody MapCreateDTO dto) {
         try {
             Map<String, String> map = bilibiliCommentService.convertMap(dto);
@@ -118,6 +118,28 @@ public class BilibiliCommentController {
             e.printStackTrace();
             return MsgUtil.fail("添加失败", e.getMessage());
         }
+    }
+
+    @EnableAsync
+    @ApiOperation("删除缓存")
+    @PostMapping("/deleteIndex")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "bvid", value = "bvid", required = true, dataType = "string", paramType = "query")
+    })
+    public MsgUtil<Object> deleteIndex(String bvid) {
+        try {
+            boolean result = esIndexService.indexExists(bvid);
+            if (result) {
+                // 删除索引
+                esIndexService.deleteIndex(bvid);
+                return MsgUtil.success("清理成功");
+            }
+            return MsgUtil.fail("没有该视频的缓存");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MsgUtil.fail("清理失败");
+        }
+
     }
 
 

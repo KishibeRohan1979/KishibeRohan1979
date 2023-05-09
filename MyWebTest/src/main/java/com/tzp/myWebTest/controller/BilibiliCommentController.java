@@ -17,10 +17,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -90,8 +87,8 @@ public class BilibiliCommentController {
         }
     }
 
-    @EnableAsync
-    @ApiOperation("强行重新爬取，现在已经废弃")
+//    @EnableAsync
+//    @ApiOperation("强行重新爬取，现在已经废弃")
 //    @PostMapping("/reAdd")
     public MsgUtil<Object> reAdd(@RequestBody MapCreateDTO dto) {
         try {
@@ -120,11 +117,10 @@ public class BilibiliCommentController {
         }
     }
 
-    @EnableAsync
     @ApiOperation("删除缓存")
-    @PostMapping("/deleteIndex")
+    @GetMapping("/deleteIndex")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "bvid", value = "bvid", required = true, dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "bvid", value = "BV号", required = true, dataType = "string", paramType = "query")
     })
     public MsgUtil<Object> deleteIndex(String bvid) {
         try {

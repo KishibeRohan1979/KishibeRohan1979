@@ -170,7 +170,7 @@ public class BiliBiliUtil {
                     for (Map<String, Object> replie : replies) {
                         Map<String, Object> map = new HashMap<>();
                         // 评论的id
-                        map.put("rpid", replie.get("rpid"));
+                        map.put("rpid", replie.get("rpid").toString());
                         // 评论的创建时间
                         map.put("ctime", replie.get("ctime"));
                         // 评论的回复数量
@@ -232,9 +232,9 @@ public class BiliBiliUtil {
                         // 记录up主是否回复了这个评论
                         map.put("isUpReplyThisMessage", upActionJsonMap.get("reply"));
                         // 记录视频的avid
-                        map.put("avid", replie.get("oid"));
+                        map.put("avid", replie.get("oid").toString());
                         // 评论是否可见（1，可见；0，不可见）
-                        map.put("isDelete", "1");
+//                        map.put("isDelete", "1");
                         JSONObject json = new JSONObject(map);
                         resultList.add(json);
                     }

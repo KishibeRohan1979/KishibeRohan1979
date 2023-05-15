@@ -50,7 +50,7 @@ public class BilibiliComment implements Serializable {
 
     // 记录会员信息（type=0 非会员， type=1 大会员， type=2 年度大会员），需要注意的是4月1日可能会不同，但是我没办法测试了
     @ApiModelProperty(value = "评论者的会员类型", name = "vipType")
-    private Integer vipType;
+    private String vipType;
 
     @ApiModelProperty(value = "vip渲染信息", name = "vipLabel")
     private Map<String, Object> vipLabel;

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			function decimalToRGBA(decimal, alpha) {
+				var r = (decimal >> 16) & 255;
+				var g = (decimal >> 8) & 255;
+				var b = decimal & 255;
+				var result="rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+				alert(result);
+			}
+		</script>
+		<button onclick="decimalToRGBA(866040552, 1)">点击</button>
+	</body>
+</html>

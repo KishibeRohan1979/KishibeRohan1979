@@ -16,6 +16,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,13 +41,17 @@ public class BilibiliCommentController {
     private BilibiliCommentService bilibiliCommentService;
 
     @ApiOperation("查询当前爬取进度")
-    @PostMapping("/getAsyncMsg")
+    @GetMapping("/getAsyncMsg")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "当时返回的检索id", required = true, dataType = "string", paramType = "query", defaultValue = "string类型值")
+            @ApiImplicitParam(name = "id", value = "当时返回的检索id", required = true, dataType = "string", paramType = "query", defaultValue = "")
     })
     public MsgUtil<Object> getAsyncMsg(String id) {
-        AsyncMsgUtil asyncMsg = asyncService.findAsyncMsgUtil(id);
-        return MsgUtil.success("请求成功", asyncMsg);
+        if (StringUtils.isNoneBlank(id)) {
+            AsyncMsgUtil asyncMsg = asyncService.findAsyncMsgUtil(id);
+            return MsgUtil.success("请求成功", asyncMsg);
+        } else {
+            return MsgUtil.fail("请输入查询BV号以查询进度");
+        }
     }
 
     @EnableAsync
@@ -81,6 +87,8 @@ public class BilibiliCommentController {
             }
             Map<String, Object> comments = esDocumentService.searchByQueryObject(dto);
             return MsgUtil.success("查询成功", comments.get("data"), (PageUtil) comments.get("page"));
+        } catch (ElasticsearchStatusException e) {
+            return MsgUtil.fail("该bv号暂时没有爬取", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             return MsgUtil.fail("查询失败", e.getMessage());

@@ -36,11 +36,20 @@ public class AsyncServiceImpl implements AsyncService {
             asyncMsg.setResult(result);
             asyncMsg.setStatus("0");
             asyncMsg.setProgress("100");
-            redisTemplate.opsForValue().set(id, asyncMsg, 60, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(id, asyncMsg, 10, TimeUnit.MINUTES);
+            Thread.sleep(5000);
+            redisTemplate.delete(id);
         } catch (Throwable throwable) {
             asyncMsg.setStatus("-1");
             asyncMsg.setResult(throwable.getLocalizedMessage());
-            redisTemplate.opsForValue().set(id, asyncMsg, 60, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(id, asyncMsg, 10, TimeUnit.MINUTES);
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                redisTemplate.delete(id);
+            }
         } finally {
             AsyncHolder.clear();
         }
@@ -52,7 +61,7 @@ public class AsyncServiceImpl implements AsyncService {
         asyncMsg.setProgress(per);
         asyncMsg.setResult("任务执行中...");
         // 设置变量值的过期时间，60分钟
-        redisTemplate.opsForValue().set(asyncMsg.getId(), asyncMsg, 60, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(asyncMsg.getId(), asyncMsg, 10, TimeUnit.MINUTES);
     }
 
     @Override
@@ -60,7 +69,7 @@ public class AsyncServiceImpl implements AsyncService {
         AsyncMsgUtil asyncMsg = AsyncHolder.get();
         asyncMsg.setResult(result);
         // 设置变量值的过期时间，60分钟
-        redisTemplate.opsForValue().set(asyncMsg.getId(), asyncMsg, 60, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(asyncMsg.getId(), asyncMsg, 10, TimeUnit.MINUTES);
     }
 
     /**

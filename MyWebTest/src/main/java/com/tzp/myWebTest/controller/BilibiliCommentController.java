@@ -66,13 +66,27 @@ public class BilibiliCommentController {
             }
             boolean result = esIndexService.indexExists(map.get("oid"));
             if (result) {
-                return MsgUtil.fail(1,"该视频下的评论在本网站有缓存");
+                return MsgUtil.fail(1,"本站有缓存：");
             }
             esIndexService.createIndex(map.get("oid"));
             bilibiliCommentService.addComment(map);
             return MsgUtil.success("添加成功");
         } catch (Exception e) {
             e.printStackTrace();
+            String oid = "";
+            if ( !"11".equals(dto.getType()) ) {
+                oid = String.valueOf(AvidAndBvidUtil.bvidToAid(dto.getOid()));
+            }
+            boolean result = false;
+            try {
+                result = esIndexService.indexExists(oid);
+                if (result) {
+                    // 删除索引
+                    esIndexService.deleteIndex(oid);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
             return MsgUtil.fail("添加失败", e.getMessage());
         }
     }
@@ -132,6 +146,7 @@ public class BilibiliCommentController {
     })
     public MsgUtil<Object> deleteIndex(String bvid) {
         try {
+            bvid = String.valueOf(AvidAndBvidUtil.bvidToAid(bvid));
             boolean result = esIndexService.indexExists(bvid);
             if (result) {
                 // 删除索引

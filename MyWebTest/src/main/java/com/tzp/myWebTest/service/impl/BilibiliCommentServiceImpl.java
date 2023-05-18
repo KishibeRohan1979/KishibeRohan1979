@@ -71,7 +71,7 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
                 }
             } catch (IOException e) {
                 i--;
-                asyncService.updateMsg("爬取暂时被拦截，这可能需要5分钟时间恢复进度...");
+                asyncService.updateMsg("被拦截，正在恢复...");
                 e.printStackTrace();
             } catch (Exception e) {
                 System.out.println("添加失败");

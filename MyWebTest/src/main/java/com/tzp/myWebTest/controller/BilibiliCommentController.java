@@ -110,7 +110,7 @@ public class BilibiliCommentController {
             if (result) {
                 // 判断进度有没有完成100%
                 AsyncMsgUtil asyncMsg = asyncService.findAsyncMsgUtil(dto.getOid());
-                if (!"100%".equals(asyncMsg.getProgress())) {
+                if (!"100".equals(asyncMsg.getProgress())) {
                     return MsgUtil.fail("请先等待任务执行完毕");
                 }
                 // 删除索引

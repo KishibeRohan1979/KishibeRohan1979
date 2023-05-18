@@ -63,7 +63,7 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
                         String beforePoint = point[0];
                         String afterPoint = point[1] + "0";
                         //更新redis缓存任务进度
-                        asyncService.updateProgress(beforePoint + "." + afterPoint.substring(0,2) + "%");
+                        asyncService.updateProgress(beforePoint + "." + afterPoint.substring(0,2));
                     }
                 } else {
                     System.out.println("第" + i + "页爬取失败，code=" + map.get("code") + "，" + map.get("requestMessage"));

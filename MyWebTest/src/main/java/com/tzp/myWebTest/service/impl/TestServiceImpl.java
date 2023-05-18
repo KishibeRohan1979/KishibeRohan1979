@@ -34,7 +34,7 @@ public class TestServiceImpl implements TestService {
             String beforePoint = point[0];
             String afterPoint = point[1] + "0";
             //更新redis缓存任务进度
-            asyncService.updateProgress(beforePoint + "." + afterPoint.substring(0,2) + "%");
+            asyncService.updateProgress(beforePoint + "." + afterPoint.substring(0,2));
             EsTest esTest = esTests.get(i);
             try {
                 esTestDocumentService.createOneDocument("es_test_data", null, esTest);

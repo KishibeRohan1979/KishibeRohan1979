@@ -35,7 +35,7 @@ public class AsyncServiceImpl implements AsyncService {
             Object result = point.proceed();
             asyncMsg.setResult(result);
             asyncMsg.setStatus("0");
-            asyncMsg.setProgress("100%");
+            asyncMsg.setProgress("100");
             redisTemplate.opsForValue().set(id, asyncMsg, 60, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             asyncMsg.setStatus("-1");

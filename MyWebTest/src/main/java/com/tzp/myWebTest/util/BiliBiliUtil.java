@@ -214,7 +214,7 @@ public class BiliBiliUtil {
                         } else {
                             map.put("fansDetail", null);
                             // 记录粉丝牌的等级
-                            map.put("fansLevel", "0");
+                            map.put("fansLevel", 0);
                             // 记录粉丝牌的名字
                             map.put("fansName", "");
                         }

@@ -26,6 +26,7 @@ public class BiliBiliUtil {
      * sex：评论者的性别
      * sign：评论者的个人简介
      * userLevel：评论者等级
+     * isSeniorMember 是不是高级会员（小闪电）
      * user_sailing：评论者的渲染信息
      * avatar：评论者的头像地址
      * isContractor：是不是up的老粉
@@ -178,11 +179,13 @@ public class BiliBiliUtil {
                         // 评论的点赞数
                         map.put("like", replie.get("like"));
                         HashMap<String, Object> memberJsonMap = JSON.parseObject(replie.get("member").toString(), HashMap.class);
-                        map.put("userid", memberJsonMap.get("mid"));
+                        map.put("userid", memberJsonMap.get("mid").toString());
                         map.put("uname", memberJsonMap.get("uname"));
                         map.put("sex", memberJsonMap.get("sex"));
                         // 记录个人简介
                         map.put("sign", memberJsonMap.get("sign"));
+                        // 记录用户是不是高级会员（小闪电）1，是；0，不是
+                        map.put("isSeniorMember", memberJsonMap.get("is_senior_member"));
                         // 记录用户等级
                         HashMap<String, Object> levelInfoJsonMap = JSON.parseObject(memberJsonMap.get("level_info").toString(), HashMap.class);
                         map.put("userLevel", levelInfoJsonMap.get("current_level"));
@@ -233,6 +236,11 @@ public class BiliBiliUtil {
                         map.put("isUpReplyThisMessage", upActionJsonMap.get("reply"));
                         // 记录视频的avid
                         map.put("avid", replie.get("oid").toString());
+                        // 是不是置顶评论
+                        map.put("isTop", false);
+                        // up主的uid
+                        HashMap<String, Object> upperJsonMap = JSON.parseObject(dataJsonMap.get("upper").toString(), HashMap.class);
+                        map.put("upperUid", upperJsonMap.get("mid").toString());
                         // 评论是否可见（1，可见；0，不可见）
 //                        map.put("isDelete", "1");
                         JSONObject json = new JSONObject(map);
@@ -308,6 +316,118 @@ public class BiliBiliUtil {
             }
         }
         return list;
+    }
+
+    // 爬取置顶评论
+    public static Map<String, Object> getTopComment(String url) throws IOException {
+        String result = callApiByGet(url);
+        HashMap<String, Object> resultJsonMap = JSON.parseObject(result, HashMap.class);
+        Map<String, Object> resultMap = new HashMap<>();
+        switch (resultJsonMap.get("code").toString()) {
+            case "0":
+                resultMap.put("code", "0");
+                HashMap<String, Object> dataJsonMap = JSON.parseObject(resultJsonMap.get("data").toString(), HashMap.class);
+                HashMap<String, Object> upperJsonMap = JSON.parseObject(dataJsonMap.get("upper").toString(), HashMap.class);
+                if (upperJsonMap.get("top") != null) {
+                    HashMap<String, Object> topJsonMap = JSON.parseObject(upperJsonMap.get("top").toString(), HashMap.class);
+                    Map<String, Object> map = new HashMap<>();
+                    // 评论的id
+                    map.put("rpid", topJsonMap.get("rpid").toString());
+                    // 评论的创建时间
+                    map.put("ctime", topJsonMap.get("ctime"));
+                    // 评论的回复数量
+                    map.put("rcount", topJsonMap.get("rcount"));
+                    // 评论的点赞数
+                    map.put("like", topJsonMap.get("like"));
+                    HashMap<String, Object> memberJsonMap = JSON.parseObject(topJsonMap.get("member").toString(), HashMap.class);
+                    map.put("userid", memberJsonMap.get("mid").toString());
+                    map.put("uname", memberJsonMap.get("uname"));
+                    map.put("sex", memberJsonMap.get("sex"));
+                    // 记录个人简介
+                    map.put("sign", memberJsonMap.get("sign"));
+                    // 记录用户是不是高级会员（小闪电）1，是；0，不是
+                    map.put("isSeniorMember", memberJsonMap.get("is_senior_member"));
+                    // 记录用户等级
+                    HashMap<String, Object> levelInfoJsonMap = JSON.parseObject(memberJsonMap.get("level_info").toString(), HashMap.class);
+                    map.put("userLevel", levelInfoJsonMap.get("current_level"));
+                    // 记录用户渲染信息
+                    HashMap<String, Object> userSailingJsonMap = JSON.parseObject(memberJsonMap.get("user_sailing").toString(), HashMap.class);
+                    map.put("userSailing", userSailingJsonMap);
+                    // 记录头像地址
+                    map.put("avatar", memberJsonMap.get("avatar"));
+                    // 记录是不是老粉
+                    map.put("isContractor", memberJsonMap.get("is_contractor"));
+                    // 记录老粉牌子称呼
+                    map.put("contractDesc", memberJsonMap.get("contract_desc"));
+                    // 记录会员信息（type=0 非会员， type=1 大会员， type=2 年度大会员），需要注意的是4月1日可能会不同，但是我没办法测试了
+                    HashMap<String, Object> vipJsonMap = JSON.parseObject(memberJsonMap.get("vip").toString(), HashMap.class);
+                    map.put("vipType", vipJsonMap.get("vipType"));
+                    // 记录现在是不是会员
+                    map.put("vipStatus", vipJsonMap.get("vipStatus"));
+                    // 记录vip的渲染信息
+                    map.put("vipLabel", vipJsonMap.get("label"));
+                    // 记录粉丝牌信息
+                    HashMap<String, Object> fansDetailJsonMap;
+                    if (memberJsonMap.get("fans_detail") != null) {
+                        fansDetailJsonMap = JSON.parseObject(memberJsonMap.get("fans_detail").toString(), HashMap.class);
+                        map.put("fansDetail", fansDetailJsonMap);
+                        // 记录粉丝牌的等级
+                        map.put("fansLevel", fansDetailJsonMap.get("level"));
+                        // 记录粉丝牌的名字
+                        map.put("fansName", fansDetailJsonMap.get("medal_name"));
+                    } else {
+                        map.put("fansDetail", null);
+                        // 记录粉丝牌的等级
+                        map.put("fansLevel", 0);
+                        // 记录粉丝牌的名字
+                        map.put("fansName", "");
+                    }
+                    // 记录评论的信息
+                    HashMap<String, Object> contentJsonMap = JSON.parseObject(topJsonMap.get("content").toString(), HashMap.class);
+                    map.put("thisUserMessage", contentJsonMap.get("message"));
+                    // 记录评论的渲染信息
+                    map.put("messageEmote", contentJsonMap.get("emote"));
+                    // 评论中发布的图片
+                    map.put("pictures", contentJsonMap.get("pictures"));
+                    // 记录up主和这个评论的互动
+                    HashMap<String, Object> upActionJsonMap = JSON.parseObject(topJsonMap.get("up_action").toString(), HashMap.class);
+                    // 记录up是否点赞了这个评论
+                    map.put("isUpLikeThisMessage", upActionJsonMap.get("like"));
+                    // 记录up主是否回复了这个评论
+                    map.put("isUpReplyThisMessage", upActionJsonMap.get("reply"));
+                    // 记录视频的avid
+                    map.put("avid", topJsonMap.get("oid").toString());
+                    // 是不是置顶评论
+                    map.put("isTop", true);
+                    // up主的uid
+                    map.put("upperUid", upperJsonMap.get("mid").toString());
+                    // 评论是否可见（1，可见；0，不可见）
+//                        map.put("isDelete", "1");
+                    JSONObject json = new JSONObject(map);
+                    resultMap.put("result", json);
+                }
+            case "-404":
+                resultMap.put("code", "-404");
+                resultMap.put("requestMessage", "什么都木有");
+                resultMap.put("result", null);
+                break;
+            case "-400":
+                resultMap.put("code", "-400");
+                resultMap.put("requestMessage", "请求错误");
+                resultMap.put("result", null);
+                break;
+            case "12002":
+                resultMap.put("code", "12002");
+                resultMap.put("requestMessage", "评论区已关闭");
+                resultMap.put("result", null);
+                break;
+            default:
+                resultMap.put("code", "-1");
+                resultMap.put("requestMessage", "请求失败");
+                resultMap.put("result", null);
+                break;
+        }
+        return resultMap;
     }
 
     // 查询某个视频底下的前x赞评论，并非排序所有评论！！！

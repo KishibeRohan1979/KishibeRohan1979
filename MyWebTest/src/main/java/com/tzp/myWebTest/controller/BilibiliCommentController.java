@@ -77,7 +77,7 @@ public class BilibiliCommentController {
             if ( !"11".equals(dto.getType()) ) {
                 oid = String.valueOf(AvidAndBvidUtil.bvidToAid(dto.getOid()));
             }
-            boolean result = false;
+            boolean result;
             try {
                 result = esIndexService.indexExists(oid);
                 if (result) {

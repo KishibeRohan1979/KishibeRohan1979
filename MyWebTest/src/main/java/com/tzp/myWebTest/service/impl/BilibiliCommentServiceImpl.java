@@ -79,6 +79,26 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
                 e.printStackTrace();
             }
         }
+        params.put("pn", "1");
+        params.put("ps", "20");
+        //更新redis缓存任务进度
+        asyncService.updateProgress("90");
+        String url = BiliBiliUtil.getUrlByMap(BiliBiliUtil.RelyURL, params);
+        System.out.println(url);
+        Map<String, Object> topMap;
+        try {
+            topMap = BiliBiliUtil.getTopComment(url);
+            if ("0".equals(topMap.get("code"))) {
+                BilibiliComment result = (BilibiliComment)topMap.get("result");
+                if (result != null) {
+                    esTestDocumentService.createOneDocument(params.get("oid"), null, result);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }  catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

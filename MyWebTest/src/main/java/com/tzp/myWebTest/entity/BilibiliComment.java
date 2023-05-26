@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -33,8 +34,11 @@ public class BilibiliComment implements Serializable {
     @ApiModelProperty(value = "评论者的个人简介", name = "sign")
     private String sign;
 
+    @ApiModelProperty(value = "记录用户是不是高级会员（小闪电）1，是；0，不是", name = "isSeniorMember")
+    private Integer isSeniorMember;
+
     @ApiModelProperty(value = "评论者等级", name = "userLevel")
-    private String userLevel;
+    private Integer userLevel;
 
     @ApiModelProperty(value = "评论者头像的渲染信息", name = "userSailing")
     private Map<String, Object> userSailing;
@@ -50,7 +54,10 @@ public class BilibiliComment implements Serializable {
 
     // 记录会员信息（type=0 非会员， type=1 大会员， type=2 年度大会员），需要注意的是4月1日可能会不同，但是我没办法测试了
     @ApiModelProperty(value = "评论者的会员类型", name = "vipType")
-    private String vipType;
+    private Integer vipType;
+
+    @ApiModelProperty(value = "记录现在是不是会员", name = "vipStatus")
+    private Integer vipStatus;
 
     @ApiModelProperty(value = "vip渲染信息", name = "vipLabel")
     private Map<String, Object> vipLabel;
@@ -68,7 +75,7 @@ public class BilibiliComment implements Serializable {
     private String thisUserMessage;
 
     @ApiModelProperty(value = "评论的图片列表", name = "pictures")
-    private String pictures;
+    private List<Object> pictures;
 
     @ApiModelProperty(value = "评论的渲染信息", name = "messageEmote")
     private Map<String, Object> messageEmote;
@@ -79,8 +86,14 @@ public class BilibiliComment implements Serializable {
     @ApiModelProperty(value = "这个评论up有没有回复（true或false）", name = "isUpReplyThisMessage")
     private Boolean isUpReplyThisMessage;
 
-//    @ApiModelProperty(value = "视频的avid", name = "avid")
-//    private String avid;
+    @ApiModelProperty(value = "记录评论是不是置顶", name = "isTop")
+    private boolean isTop;
+
+    @ApiModelProperty(value = "up主的uid", name = "upUid")
+    private String upperUid;
+
+    @ApiModelProperty(value = "视频的avid", name = "avid")
+    private String avid;
 //
 //    @ApiModelProperty(value = "视频的bvid", name = "bvid")
 //    private String bvid;

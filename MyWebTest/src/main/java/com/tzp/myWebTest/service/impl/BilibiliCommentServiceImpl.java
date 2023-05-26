@@ -21,7 +21,7 @@ import java.util.Map;
 public class BilibiliCommentServiceImpl implements BilibiliCommentService {
 
     @Autowired
-    private EsDocumentService<BilibiliComment> esTestDocumentService;
+    private EsDocumentService<Object> esTestDocumentService;
 
     @Autowired
     private AsyncService asyncService;
@@ -55,7 +55,7 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
                         System.out.println("发现已经没有内容了");
                         break;
                     } else {
-                        List<BilibiliComment> resultList = (List<BilibiliComment>)map.get("resultList");
+                        List<Object> resultList = (List<Object>)map.get("resultList");
                         esTestDocumentService.batchCreate(params.get("oid"), resultList);
                         //计算百分比
                         String per = String.valueOf( ((double) i/totalPage)*100 );
@@ -89,7 +89,7 @@ public class BilibiliCommentServiceImpl implements BilibiliCommentService {
         try {
             topMap = BiliBiliUtil.getTopComment(url);
             if ("0".equals(topMap.get("code"))) {
-                BilibiliComment result = (BilibiliComment)topMap.get("result");
+                Object result = topMap.get("result");
                 if (result != null) {
                     esTestDocumentService.createOneDocument(params.get("oid"), null, result);
                 }

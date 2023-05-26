@@ -406,6 +406,7 @@ public class BiliBiliUtil {
                     JSONObject json = new JSONObject(map);
                     resultMap.put("result", json);
                 }
+                break;
             case "-404":
                 resultMap.put("code", "-404");
                 resultMap.put("requestMessage", "什么都木有");

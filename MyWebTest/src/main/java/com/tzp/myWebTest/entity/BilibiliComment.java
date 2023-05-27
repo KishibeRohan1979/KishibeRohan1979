@@ -71,6 +71,9 @@ public class BilibiliComment implements Serializable {
     @ApiModelProperty(value = "评论者的粉丝牌内容", name = "fansName")
     private String fansName;
 
+    @ApiModelProperty(value = "记录拥不拥有upper的粉丝牌", name = "fansName")
+    private boolean isUpperFansCard;
+
     @ApiModelProperty(value = "评论者的论点（即评论内容）", name = "thisUserMessage")
     private String thisUserMessage;
 

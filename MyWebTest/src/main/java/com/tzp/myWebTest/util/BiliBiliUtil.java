@@ -214,12 +214,16 @@ public class BiliBiliUtil {
                             map.put("fansLevel", fansDetailJsonMap.get("level"));
                             // 记录粉丝牌的名字
                             map.put("fansName", fansDetailJsonMap.get("medal_name"));
+                            // 记录拥不拥有upper的粉丝牌
+                            map.put("isUpperFansCard", true);
                         } else {
                             map.put("fansDetail", null);
                             // 记录粉丝牌的等级
                             map.put("fansLevel", 0);
                             // 记录粉丝牌的名字
                             map.put("fansName", "");
+                            // 记录拥不拥有upper的粉丝牌
+                            map.put("isUpperFansCard", false);
                         }
                         // 记录评论的信息
                         HashMap<String, Object> contentJsonMap = JSON.parseObject(replie.get("content").toString(), HashMap.class);

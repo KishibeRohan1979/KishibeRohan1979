@@ -16,4 +16,6 @@
 
 3、Redis（我使用的是Windows的Redis-x64-3.0.504：主要是开发方便，懒得开虚拟机哩😋）
 
-以上的环境都可以在MyWebTest/src/main/resources/application.yml文件中修改。自己看着玩吧
+以上的环境都可以在MyWebTest/src/main/resources/application.yml文件中修改。自己看着玩吧。
+
+前端项目在[这里](https://github.com/KishibeRohan1979/web-tool-vue)

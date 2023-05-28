@@ -5,9 +5,11 @@ import com.alibaba.fastjson.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -59,14 +61,19 @@ public class BiliBiliUtil {
         URL url = new URL(apiUrl);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
+
 //        int status = con.getResponseCode();
 //        System.out.println("状态码：" + status);
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+        InputStream inputStream = con.getInputStream();
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+
         String inputLine;
         StringBuilder content = new StringBuilder();
         while ((inputLine = in.readLine()) != null) {
             content.append(inputLine);
         }
+
         in.close();
         con.disconnect();
 
@@ -248,6 +255,7 @@ public class BiliBiliUtil {
                         // 评论是否可见（1，可见；0，不可见）
 //                        map.put("isDelete", "1");
                         JSONObject json = new JSONObject(map);
+                        System.out.println(json);
                         resultList.add(json);
                     }
                     if (replies.size() == 0) {

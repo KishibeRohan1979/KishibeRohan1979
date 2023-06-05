@@ -76,6 +76,8 @@ public class BilibiliCommentController {
             String oid = "";
             if ( !"11".equals(dto.getType()) ) {
                 oid = String.valueOf(AvidAndBvidUtil.bvidToAid(dto.getOid()));
+            } else {
+                oid = dto.getOid();
             }
             boolean result;
             try {

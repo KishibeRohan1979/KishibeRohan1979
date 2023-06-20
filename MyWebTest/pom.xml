@@ -12,6 +12,7 @@
     <description>各种测试小工具</description>
     <artifactId>MyWebTest</artifactId>
     <name>MyWebTest</name>
+    <version>1.0.0</version>
 
     <properties>
         <java.version>1.8</java.version>
